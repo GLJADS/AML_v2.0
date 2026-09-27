@@ -1,6 +1,6 @@
 # AML Assignment 1 - CDs & Vinyl
 
-Team XX, Advanced Machine Learning 2026. Deadline is **Sunday October 25, 20:00**, submitted through Canvas.
+Team 20, Advanced Machine Learning 2026. Deadline is **Sunday October 25, 20:00**, submitted through Canvas.
 
 We're basically redoing what a previous group did last year (Movies & TV instead of CDs & Vinyl), so a lot of the pipeline is already sketched out. Don't just copy their numbers though, our dataset is different so every result needs to be regenerated.
 
