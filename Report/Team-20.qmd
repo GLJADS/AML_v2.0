@@ -1,12 +1,18 @@
 ---
 title: "Predicting Review Sentiment for CDs & Vinyl: Text Representation, Dimensionality Reduction, and Modeling"
 subtitle: "Advanced Machine Learning 2026 — Assignment 1"
-author: "Team XX"
+author: "Team 20"
+subtitle: "Abdulhabir Karahanli, Kíra Kollár, Ewa Kurowska, Gilbert Laanen"
 date: today
 format:
   pdf:
     number-sections: true
     toc: false
+    geometry:
+          - margin=2cm
+    editor: visual
+    toc: true
+    lof: true
 ---
 
 <!--
@@ -16,7 +22,7 @@ HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until fin
 - Section 6 (Training procedure) and Section 7 (Evaluation) both come from Task 6.
 - Max length: 6 A4 pages, EXCLUDING figures, tables, references and the Technology Statement.
 - Every <!-- FIGURE:start --> ... <!-- FIGURE:end --> and <!-- TABLE:start --> ... <!-- TABLE:end -->
-  block below is marked so you can mechanically strip them when producing Team-XX-text.pdf.
+  block below is marked so you can mechanically strip them when producing Team-20-text.pdf.
   See Report/README.md for the two ways to render that second PDF.
 -->
 
