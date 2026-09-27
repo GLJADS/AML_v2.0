@@ -1,0 +1,117 @@
+---
+title: "Predicting Review Sentiment for CDs & Vinyl: Text Representation, Dimensionality Reduction, and Modeling"
+subtitle: "Advanced Machine Learning 2026 — Assignment 1"
+author: "Team XX"
+date: today
+format:
+  pdf:
+    number-sections: true
+    toc: false
+---
+
+<!--
+HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until final submission):
+- 9 required report sections below match the brief exactly, not the 8 task numbers.
+- Section 2 (Preprocessing) and Section 3 (Analysis) both come from Task 2 in the notebook.
+- Section 6 (Training procedure) and Section 7 (Evaluation) both come from Task 6.
+- Max length: 6 A4 pages, EXCLUDING figures, tables, references and the Technology Statement.
+- Every <!-- FIGURE:start --> ... <!-- FIGURE:end --> and <!-- TABLE:start --> ... <!-- TABLE:end -->
+  block below is marked so you can mechanically strip them when producing Team-XX-text.pdf.
+  See Report/README.md for the two ways to render that second PDF.
+-->
+
+# Dataset Creation
+
+<!-- TODO: 2-3 sentences. State the target label definition (rating >= 4 -> positive,
+rating <= 3 -> negative) and report the class balance you found in the notebook (Task 1). -->
+
+<!-- TABLE:start -->
+<!-- TODO: insert class balance table/figure here, e.g. Report/images/class_balance.png -->
+<!-- TABLE:end -->
+
+# Preprocessing
+
+<!-- TODO: Summarize your preprocessing pipeline (lowercasing, HTML-tag stripping,
+punctuation/digit removal, tokenization) and justify each choice. Explicitly answer
+"should all reviews be included?" here — this is a required question in the 2026 brief
+that was not present in earlier years, don't skip it. -->
+
+# Analysis
+
+<!-- TODO: Descriptive statistics (number of reviews, average words per review, number
+of unique words) and the 50 most common words before stopword removal. -->
+
+<!-- FIGURE:start -->
+<!-- TODO: insert Report/images/top50_words.png here -->
+<!-- FIGURE:end -->
+
+# Feature Representation
+
+<!-- TODO: Bag-of-Words / stopword removal, the 100 most common words afterward, and
+mutual information results (Task 3). Then TF-IDF + Logistic Regression results, and your
+Word2Vec own-vs-pretrained comparison with the model you chose and why (Task 4). Explain
+how you converted word embeddings into document embeddings. -->
+
+<!-- TABLE:start -->
+<!-- TODO: insert Report/tables/top100_mutual_information.csv (top rows) here -->
+<!-- TABLE:end -->
+
+# Feature Selection and Dimensionality Reduction
+
+<!-- TODO: PCA and ICA projections of the Word2Vec word embeddings to 2D (Task 5).
+Discuss whether semantically similar words end up close together, with at least one
+concrete example pair. -->
+
+<!-- FIGURE:start -->
+<!-- TODO: insert PCA/ICA word embedding scatter plots here -->
+<!-- FIGURE:end -->
+
+# Training Procedure
+
+<!-- TODO: KNN / GaussianNB / Logistic Regression setup on the Word2Vec document
+embeddings, your K-Fold cross-validation setup, and your hyperparameter search
+(GridSearchCV/RandomizedSearchCV) on Logistic Regression, including the parameter grid
+you used (Task 6, first half). -->
+
+# Evaluation
+
+<!-- TODO: Report final performance on a held-out test set — NOT the cross-validation
+search score. Be explicit that these are two different numbers and that the test-set
+score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs
+Logistic Regression, and compare against the TF-IDF baseline from the Feature
+Representation section (Task 6, second half). -->
+
+<!-- TABLE:start -->
+<!-- TODO: insert model comparison table (accuracy, F1, precision, recall per model) here -->
+<!-- TABLE:end -->
+
+# Clustering and Topic Modeling
+
+<!-- TODO: Agglomerative Clustering and DBSCAN on the Word2Vec word embeddings — what do
+the clusters correspond to? Then BERTopic and FuzzyTM topics extracted from the reviews,
+with the quality metric(s) you used to evaluate them. Report the vocabulary pruning
+threshold you used for FuzzyTM — this is explicitly required (Task 7). -->
+
+<!-- FIGURE:start -->
+<!-- TODO: insert clustering / topic visualization here -->
+<!-- FIGURE:end -->
+
+# Discussion and Limitations
+
+<!-- TODO: Which representation + model performed best overall, and why. Limitations of
+your approach (e.g. mean-pooled embeddings lose word order, corpus size limits for your
+own Word2Vec, DBSCAN's sensitivity to eps, FuzzyTM memory constraints). Concrete
+suggestions for improvement (Task 8). -->
+
+# References
+
+<!-- TODO: cite scikit-learn, gensim, BERTopic, FuzzyTM, and any papers you reference for
+methodology choices (e.g. the original Word2Vec paper if you discuss it, Amazon Reviews
+2023 dataset paper). Use a consistent citation style. -->
+
+# Technology Statement
+
+<!-- TODO: Required statement on which tools/AI assistance you used while producing this
+report and code, per your course's academic integrity policy. Excluded from the 6-page
+count but must be present. Check the exact wording your course expects for this
+statement — it was not reproduced in full in the assignment PDF text extracted here. -->
