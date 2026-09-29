@@ -17,22 +17,6 @@ format:
     lof: true
 ---
 
----
-title: "Predicting Review Sentiment for CDs & Vinyl: Text Representation, Dimensionality Reduction, and Modeling"
-subtitle: "Advanced Machine Learning 2026 — Assignment 1"
-author: "Team 20"
-subtitle: "Abdulhabir Karahanli, Kíra Kollár, Ewa Kurowska, Gilbert Laanen"
-date: today
-format:
-  pdf:
-    number-sections: true
-    geometry:
-          - margin=2cm
-    editor: visual
-    toc: true
-    lof: true
----
-
 ```{=html}
 <!--
 HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until final submission):
