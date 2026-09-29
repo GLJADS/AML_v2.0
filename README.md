@@ -2,10 +2,10 @@
 
 Task Division for both coding and report! 
 
-1-3: Kira 
-4 & 5: Habir 
-6: Ewa
-7: Gilbet
+1-3: Kira; 
+4 & 5: Habir; 
+6: Ewa;
+7: Gilbet.
 
 Team 20, Advanced Machine Learning 2026. Deadline is **Sunday October 25, 20:00**, submitted through Canvas.
 
