@@ -1,0 +1,7 @@
+pair,cosine_100D,rank_of_b_near_a_PCA,rank_of_b_near_a_ICA
+great / excellent,0.723,926,931
+terrible / awful,0.764,15,15
+vinyl / lp,0.724,487,475
+scratched / skips,0.684,7,6
+jazz / blues,0.702,360,383
+great / terrible,0.45,982,948

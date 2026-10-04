@@ -1,0 +1,5 @@
+embedding,pooling,dims,cv_macro_f1_mean,cv_macro_f1_std
+pretrained,mean,300,0.6964,0.0028
+own,mean,100,0.6882,0.0055
+own,idf,100,0.6832,0.0035
+pretrained,idf,300,0.6817,0.0028
