@@ -1,13 +1,13 @@
 ---
 title: "Predicting Review Sentiment for CDs & Vinyl: Text Representation, Dimensionality Reduction, and Modeling"
 subtitle: "Advanced Machine Learning 2026 — Assignment 1"
-author: "Team 20"
-subtitle: "Abdulhabir Karahanli, Kíra Kollár, Ewa Kurowska, Gilbert Laanen"
+author: 
+  - "Team 20"
+  - "Abdulhabir Karahanli, Kíra Kollár, Ewa Kurowska, Gilbert Laanen"
 date: today
 format:
   pdf:
     number-sections: true
-    toc: false
     geometry:
           - margin=2cm
     editor: visual
@@ -15,109 +15,157 @@ format:
     lof: true
 ---
 
+```{=html}
 <!--
 HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until final submission):
 - 9 required report sections below match the brief exactly, not the 8 task numbers.
 - Section 2 (Preprocessing) and Section 3 (Analysis) both come from Task 2 in the notebook.
 - Section 6 (Training procedure) and Section 7 (Evaluation) both come from Task 6.
 - Max length: 6 A4 pages, EXCLUDING figures, tables, references and the Technology Statement.
-- Every <!-- FIGURE:start --> ... <!-- FIGURE:end --> and <!-- TABLE:start --> ... <!-- TABLE:end -->
-  block below is marked so you can mechanically strip them when producing Team-20-text.pdf.
-  See Report/README.md for the two ways to render that second PDF.
--->
+- Every <!-- FIGURE:start -->
+```
+
+... <!-- FIGURE:end --> and <!-- TABLE:start --> ... <!-- TABLE:end --> block below is marked so you can mechanically strip them when producing Team-20-text.pdf. See Report/README.md for the two ways to render that second PDF. --\>
 
 # Dataset Creation
 
-<!-- TODO: 2-3 sentences. State the target label definition (rating >= 4 -> positive,
-rating <= 3 -> negative) and report the class balance you found in the notebook (Task 1). -->
+Customer sentiment serves as a key indicator of product quality, pressing standards, and overall listener experience. However, manually analyzing thousands of reviews is not scalable, making machine learning a valuable tool for automating sentiment detection and uncovering underlying themes. In this project, we analyze the Amazon CDs & Vinyl dataset to classify customer opinions into binary sentiment labels and uncover major thematic patterns.
+
+The Amazon CDs & Vinyl dataset includes numerical ratings (1–5) and corresponding textual reviews. To formulate this as a binary sentiment classification task, ratings of 4 and 5 are labeled as positive (1), while ratings of 3 and below are labeled as negative (0). The primary objective is to predict sentiment labels strictly based on the textual content of each review.
+
+The raw dataset initially contained 50,000 observations. Following the removal of 2,803 duplicate records, the initial deduplicated corpus comprised 47,197 reviews. The dataset displays a distribution notably skewed toward positive feedback: 86.63% of entries correspond to positive ratings (1), while only 13.37% correspond to negative ratings (0), as illustrated in @fig-class-balance.
 
 <!-- TABLE:start -->
-<!-- TODO: insert class balance table/figure here, e.g. Report/images/class_balance.png -->
+
+![Distribution of sentiment labels in the CDs & Vinyl dataset](images/class_balance.png){#fig-class-balance width="50%"}
+
 <!-- TABLE:end -->
 
 # Preprocessing
 
-<!-- TODO: Summarize your preprocessing pipeline (lowercasing, HTML-tag stripping,
-punctuation/digit removal, tokenization) and justify each choice. Explicitly answer
-"should all reviews be included?" here — this is a required question in the 2026 brief
-that was not present in earlier years, don't skip it. -->
+Each review is processed to standardize text and eliminate lexical noise. Characters are converted to lowercase, and all HTML tags, line breaks, punctuation, digits, special characters, and bracketed text are stripped before tokenization.
+
+Regarding whether all reviews should be included in the analysis, non-informative entries must be pruned to avoid introducing noise and unrepresentative sparse vectors into downstream models:
+
+- **Missing and empty text:** Reviews lacking text content provide no predictive signal and cannot be converted into meaningful representations; 6 empty reviews were dropped.
+
+- **Punctuation and emoji-only entries:** Text containing exclusively non-alphanumeric symbols provides no valid vocabulary tokens post-cleaning; 34 such reviews were removed.
+
+- **Extremely short reviews:** While 2,039 reviews contained $\le 2$ words, reviews with at least one informative token were retained, resulting in a final clean dataset of 47,163 reviews retained out of 47,197.
 
 # Analysis
 
-<!-- TODO: Descriptive statistics (number of reviews, average words per review, number
-of unique words) and the 50 most common words before stopword removal. -->
+Descriptive statistics were computed across the retained tokenized corpus prior to stopword filtering to assess review lengths and vocabulary dispersion.
+
+|  |  |  |
+|------------------------|------------------------|------------------------|
+| **Number of reviews** | **Average words per review** | **Number of unique words** |
+| 47,163 | 81.00 | 70,094 |
+
+: Descriptive statistics of the preprocessed corpus.
+
+The corpus contains 47,163 observations with an average of 81.00 words per review and a rich vocabulary of 70,094 unique words. A word cloud was generated to visualize the most frequently occurring terms, confirming domain relevance and identifying potential sources of syntactic noise, as shown in @fig-top50-words.
 
 <!-- FIGURE:start -->
-<!-- TODO: insert Report/images/top50_words.png here -->
+
+![Top 50 most frequent words before stopword removal.](images/top50_words.png){#fig-top50-words}
+
 <!-- FIGURE:end -->
+
+Prior to stopword removal, the most prominent tokens consist of syntactic filler words (e.g., *"the"*, *"and"*, *"a"*, *"of"*, *"to"*) alongside core domain terms (e.g., *"album"*, *"song"*, *"cd"*, *"sound"*, *"track"*, *"music"*) and evaluative sentiment cues (*"great"*, *"good"*, *"love"*, *"best"*).
 
 # Feature Representation
 
-<!-- TODO: Bag-of-Words / stopword removal, the 100 most common words afterward, and
-mutual information results (Task 3). Then TF-IDF + Logistic Regression results, and your
-Word2Vec own-vs-pretrained comparison with the model you chose and why (Task 4). Explain
-how you converted word embeddings into document embeddings. -->
+The first text representation technique applied was the Bag-of-Words (BoW) model. This approach converts each review into a numerical vector based on word frequency. Although this approach disregards grammar and word order, it captures overall word occurrence patterns, providing a simple and effective baseline for text-based sentiment classification.
+
+Stopwords were removed using scikit-learn's built-in English stopword list. After stopword removal, the 100 most common words concentrate heavily on musical content (*"album"*, *"song"*, *"sound"*, *"tracks"*, *"band"*, *"record"*) and sentiment evaluators (*"great"*, *"love"*, *"good"*, *"bad"*, *"best"*).
+
+To measure feature discriminability, Mutual Information was calculated between these 100 words and the target sentiment label. The top 20 most informative words are shown in @fig-mutual-info.
 
 <!-- TABLE:start -->
-<!-- TODO: insert Report/tables/top100_mutual_information.csv (top rows) here -->
+
+![Top 20 most informative words ranked by Mutual Information.](images/top20_mutual_information.png){#fig-mutual-info width="80%"}
+
 <!-- TABLE:end -->
+
+The mutual information analysis reveals that explicit sentiment adjectives (*"great"*, *"bad"*, *"love"*, *"like"*, *"better"*, *"good"*) carry the highest information gain for separating positive from negative listener ratings. Specifically, *"great"* exhibits the highest mutual information score (\~0.0089), followed by *"bad"* (\~0.0062) and *"love"* (\~0.0059). In contrast, neutral musical nouns (*"record"*, *"sound"*, *"songs"*) possess significantly lower mutual information despite having high raw term frequencies. This demonstrates that domain-specific nouns alone are poor discriminators of sentiment, whereas polar evaluative descriptors provide the decisive classification signal.
 
 # Feature Selection and Dimensionality Reduction
 
+```{=html}
 <!-- TODO: PCA and ICA projections of the Word2Vec word embeddings to 2D (Task 5).
 Discuss whether semantically similar words end up close together, with at least one
 concrete example pair. -->
+```
 
 <!-- FIGURE:start -->
+
 <!-- TODO: insert PCA/ICA word embedding scatter plots here -->
+
 <!-- FIGURE:end -->
 
 # Training Procedure
 
+```{=html}
 <!-- TODO: KNN / GaussianNB / Logistic Regression setup on the Word2Vec document
 embeddings, your K-Fold cross-validation setup, and your hyperparameter search
 (GridSearchCV/RandomizedSearchCV) on Logistic Regression, including the parameter grid
 you used (Task 6, first half). -->
+```
 
 # Evaluation
 
+```{=html}
 <!-- TODO: Report final performance on a held-out test set — NOT the cross-validation
 search score. Be explicit that these are two different numbers and that the test-set
 score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs
 Logistic Regression, and compare against the TF-IDF baseline from the Feature
 Representation section (Task 6, second half). -->
+```
 
 <!-- TABLE:start -->
+
 <!-- TODO: insert model comparison table (accuracy, F1, precision, recall per model) here -->
+
 <!-- TABLE:end -->
 
 # Clustering and Topic Modeling
 
+```{=html}
 <!-- TODO: Agglomerative Clustering and DBSCAN on the Word2Vec word embeddings — what do
 the clusters correspond to? Then BERTopic and FuzzyTM topics extracted from the reviews,
 with the quality metric(s) you used to evaluate them. Report the vocabulary pruning
 threshold you used for FuzzyTM — this is explicitly required (Task 7). -->
+```
 
 <!-- FIGURE:start -->
+
 <!-- TODO: insert clustering / topic visualization here -->
+
 <!-- FIGURE:end -->
 
 # Discussion and Limitations
 
+```{=html}
 <!-- TODO: Which representation + model performed best overall, and why. Limitations of
 your approach (e.g. mean-pooled embeddings lose word order, corpus size limits for your
 own Word2Vec, DBSCAN's sensitivity to eps, FuzzyTM memory constraints). Concrete
 suggestions for improvement (Task 8). -->
+```
 
 # References
 
+```{=html}
 <!-- TODO: cite scikit-learn, gensim, BERTopic, FuzzyTM, and any papers you reference for
 methodology choices (e.g. the original Word2Vec paper if you discuss it, Amazon Reviews
 2023 dataset paper). Use a consistent citation style. -->
+```
 
 # Technology Statement
 
+```{=html}
 <!-- TODO: Required statement on which tools/AI assistance you used while producing this
 report and code, per your course's academic integrity policy. Excluded from the 6-page
 count but must be present. Check the exact wording your course expects for this
 statement — it was not reproduced in full in the assignment PDF text extracted here. -->
+```
