@@ -137,22 +137,6 @@ embeddings, your K-Fold cross-validation setup, and your hyperparameter search
 you used (Task 6, first half). -->
 ```
 
-# Evaluation
-
-```{=html}
-<!-- TODO: Report final performance on a held-out test set — NOT the cross-validation
-search score. Be explicit that these are two different numbers and that the test-set
-score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs
-Logistic Regression, and compare against the TF-IDF baseline from the Feature
-Representation section (Task 6, second half). -->
-```
-
-<!-- TABLE:start -->
-
-<!-- TODO: insert model comparison table (accuracy, F1, precision, recall per model) here -->
-
-<!-- TABLE:end -->
-
 # Clustering and Topic Modeling
 
 **Word embedding clustering.** We applied Agglomerative Clustering and DBSCAN to the 2,000 most frequent words from our own Word2Vec model, using cosine distance. DBSCAN (`eps=0.38`, `min_samples=10`) identified 13 clusters with a silhouette score of 0.260, excluding noise points. The clusters captured recognizable semantic groups, including music formats, positive evaluations, instruments, classical music, and purchasing experiences. However, 87.6% of words were classified as noise. Agglomerative Clustering (average linkage, 13 clusters) assigned all words to clusters but achieved a silhouette score of only 0.017, with several large, semantically mixed clusters. Thus, DBSCAN identified more coherent local groups, whereas Agglomerative Clustering provided broader but less distinct coverage.
@@ -167,13 +151,17 @@ Representation section (Task 6, second half). -->
 
 **Evaluation.** FuzzyTM achieved higher C_v coherence (0.7294 versus 0.6371) and identified more interpretable topics, particularly around classical compositions, orchestral performances, and musical characteristics. BERTopic achieved higher topic diversity (0.9667 versus 0.5700), but its highly imbalanced topic distribution, with 99.03% of reviews assigned to one generic topic, limited its usefulness. FuzzyTM showed considerable overlap in generic review vocabulary. Overall, FuzzyTM provided more meaningful thematic differentiation for this dataset, although neither method produced consistently distinct topics.
 
-# Discussion and Limitations
+# Evaluation & Discussion
 
 ```{=html}
 <!-- TODO: Which representation + model performed best overall, and why. Limitations of
 your approach (e.g. mean-pooled embeddings lose word order, corpus size limits for your
 own Word2Vec, DBSCAN's sensitivity to eps, FuzzyTM memory constraints). Concrete
 suggestions for improvement (Task 8). -->
+```
+
+```{=html}
+<!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
 ```
 
 # References
