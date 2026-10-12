@@ -139,7 +139,13 @@ you used (Task 6, first half). -->
 
 # Clustering and Topic Modeling
 
-**Word embedding clustering.** We applied Agglomerative Clustering and DBSCAN to the 2,000 most frequent words from our own Word2Vec model, using cosine distance. DBSCAN (`eps=0.38`, `min_samples=10`) identified 13 clusters with a silhouette score of 0.260, excluding noise points. The clusters captured recognizable semantic groups, including music formats, positive evaluations, instruments, classical music, and purchasing experiences. However, 87.6% of words were classified as noise. Agglomerative Clustering (average linkage, 13 clusters) assigned all words to clusters but achieved a silhouette score of only 0.017, with several large, semantically mixed clusters. Thus, DBSCAN identified more coherent local groups, whereas Agglomerative Clustering provided broader but less distinct coverage.
+**Word embedding clustering.** We applied Agglomerative Clustering and DBSCAN to the 2,000 most frequent words from our own Word2Vec model, using cosine distance. DBSCAN (`eps=0.38`, `min_samples=10`) identified 13 clusters with a silhouette score of 0.260, excluding noise points. The clusters captured recognizable semantic groups, including music formats, positive evaluations, instruments, classical music, and purchasing experiences. However, 87.6% of words were classified as noise. The sensitivity analysis (Figure @DBSCAN_sensitivity_analysis) illustrates the trade-off: increasing `eps` reduces noise but causes the largest cluster to dominate, limiting meaningful separation. Agglomerative Clustering (average linkage, 13 clusters) assigned all words to clusters but achieved a silhouette score of only 0.017, with several large, semantically mixed clusters. Thus, DBSCAN identified more coherent local groups, whereas Agglomerative Clustering provided broader but less distinct coverage.
+
+<!-- FIGURE:start -->
+
+![DBSCAN_sensitivity_analysis](images/DBSCAN_sensitivity_analysis.png){#DBSCAN_sensitivity_analysis}
+
+<!-- FIGURE:end -->
 
 **Topic modeling.** BERTopic and FuzzyTM were applied to a reproducible sample of 10,000 training reviews. BERTopic used the selected 100-dimensional mean Word2Vec document embeddings. Its final configuration identified three topics, but assigned 99.03% of reviews to one generic music-related topic. FuzzyTM used ten topics and fuzzy c-means clustering. To limit memory consumption, terms occurring in fewer than 20 reviews were removed (`min_df=20`), terms occurring in more than 90% of reviews were excluded, and the vocabulary was capped at 1,500 words. After preprocessing, 9,896 documents remained.
 
@@ -160,9 +166,7 @@ own Word2Vec, DBSCAN's sensitivity to eps, FuzzyTM memory constraints). Concrete
 suggestions for improvement (Task 8). -->
 ```
 
-```{=html}
 <!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
-```
 
 # References
 
