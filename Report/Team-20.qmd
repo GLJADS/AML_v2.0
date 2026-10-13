@@ -32,55 +32,68 @@ HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until fin
 
 # Dataset Creation
 
-```{=html}
-<!-- TODO: 2-3 sentences. State the target label definition (rating >= 4 -> positive,
-rating <= 3 -> negative) and report the class balance you found in the notebook (Task 1). -->
-```
+Customer sentiment serves as a key indicator of product quality, pressing standards, and overall listener experience. However, manually analyzing thousands of reviews is not scalable, making machine learning a valuable tool for automating sentiment detection and uncovering underlying themes. In this project, we analyze the Amazon CDs & Vinyl dataset to classify customer opinions into binary sentiment labels and uncover major thematic patterns.
+
+The Amazon CDs & Vinyl dataset includes numerical ratings (1–5) and corresponding textual reviews. To formulate this as a binary sentiment classification task, ratings of 4 and 5 are labeled as positive (1), while ratings of 3 and below are labeled as negative (0). The primary objective is to predict sentiment labels strictly based on the textual content of each review.
+
+The raw dataset initially contained 50,000 observations. Following the removal of 2,803 duplicate records, the initial deduplicated corpus comprised 47,197 reviews. The dataset displays a distribution notably skewed toward positive feedback: 86.63% of entries correspond to positive ratings (1), while only 13.37% correspond to negative ratings (0), as illustrated in @fig-class-balance.
 
 <!-- TABLE:start -->
 
-<!-- TODO: insert class balance table/figure here, e.g. Report/images/class_balance.png -->
+![Distribution of sentiment labels in the CDs & Vinyl dataset](images/class_balance.png){#fig-class-balance width="50%"}
 
 <!-- TABLE:end -->
 
 # Preprocessing
 
-```{=html}
-<!-- TODO: Summarize your preprocessing pipeline (lowercasing, HTML-tag stripping,
-punctuation/digit removal, tokenization) and justify each choice. Explicitly answer
-"should all reviews be included?" here — this is a required question in the 2026 brief
-that was not present in earlier years, don't skip it. -->
-```
+Each review is processed to standardize text and eliminate lexical noise. Characters are converted to lowercase, and all HTML tags, line breaks, punctuation, digits, special characters, and bracketed text are stripped before tokenization.
+
+Regarding whether all reviews should be included in the analysis, non-informative entries must be pruned to avoid introducing noise and unrepresentative sparse vectors into downstream models:
+
+- **Missing and empty text:** Reviews lacking text content provide no predictive signal and cannot be converted into meaningful representations; 6 empty reviews were dropped.
+
+- **Punctuation and emoji-only entries:** Text containing exclusively non-alphanumeric symbols provides no valid vocabulary tokens post-cleaning; 34 such reviews were removed.
+
+- **Extremely short reviews:** While 2,039 reviews contained $\le 2$ words, reviews with at least one informative token were retained, resulting in a final clean dataset of 47,163 reviews retained out of 47,197.
 
 # Analysis
 
-```{=html}
-<!-- TODO: Descriptive statistics (number of reviews, average words per review, number
-of unique words) and the 50 most common words before stopword removal. -->
-```
+Descriptive statistics were computed across the retained tokenized corpus prior to stopword filtering to assess review lengths and vocabulary dispersion.
+
+|  |  |  |
+|------------------------|------------------------|------------------------|
+| **Number of reviews** | **Average words per review** | **Number of unique words** |
+| 47,163 | 81.00 | 70,094 |
+
+: Descriptive statistics of the preprocessed corpus.
+
+The corpus contains 47,163 observations with an average of 81.00 words per review and a rich vocabulary of 70,094 unique words. A word cloud was generated to visualize the most frequently occurring terms, confirming domain relevance and identifying potential sources of syntactic noise, as shown in @fig-top50-words.
 
 <!-- FIGURE:start -->
 
-<!-- TODO: insert Report/images/top50_words.png here -->
+![Top 50 most frequent words before stopword removal.](images/top50_words.png){#fig-top50-words}
 
 <!-- FIGURE:end -->
 
+Prior to stopword removal, the most prominent tokens consist of syntactic filler words (e.g., *"the"*, *"and"*, *"a"*, *"of"*, *"to"*) alongside core domain terms (e.g., *"album"*, *"song"*, *"cd"*, *"sound"*, *"track"*, *"music"*) and evaluative sentiment cues (*"great"*, *"good"*, *"love"*, *"best"*).
+
 # Feature Representation
 
-```{=html}
-<!-- TODO: Bag-of-Words / stopword removal, the 100 most common words afterward, and
-mutual information results (Task 3). Then TF-IDF + Logistic Regression results, and your
-Word2Vec own-vs-pretrained comparison with the model you chose and why (Task 4). Explain
-how you converted word embeddings into document embeddings. -->
-```
+The first text representation technique applied was the Bag-of-Words (BoW) model. This approach converts each review into a numerical vector based on word frequency. Although this approach disregards grammar and word order, it captures overall word occurrence patterns, providing a simple and effective baseline for text-based sentiment classification.
+
+Stopwords were removed using scikit-learn's built-in English stopword list. After stopword removal, the 100 most common words concentrate heavily on musical content (*"album"*, *"song"*, *"sound"*, *"tracks"*, *"band"*, *"record"*) and sentiment evaluators (*"great"*, *"love"*, *"good"*, *"bad"*, *"best"*).
+
+To measure feature discriminability, Mutual Information was calculated between these 100 words and the target sentiment label. The top 20 most informative words are shown in @fig-mutual-info.
 
 <!-- TABLE:start -->
 
-<!-- TODO: insert Report/tables/top100_mutual_information.csv (top rows) here -->
+![Top 20 most informative words ranked by Mutual Information.](images/top20_mutual_information.png){#fig-mutual-info width="80%"}
 
 <!-- TABLE:end -->
 
-<!-- Task 3 text (Kira) goes above this line. Task 4 below (Habir). -->
+The mutual information analysis reveals that explicit sentiment adjectives (*"great"*, *"bad"*, *"love"*, *"like"*, *"better"*, *"good"*) carry the highest information gain for separating positive from negative listener ratings. Specifically, *"great"* exhibits the highest mutual information score (\~0.0089), followed by *"bad"* (\~0.0062) and *"love"* (\~0.0059). In contrast, neutral musical nouns (*"record"*, *"sound"*, *"songs"*) possess significantly lower mutual information despite having high raw term frequencies. This demonstrates that domain-specific nouns alone are poor discriminators of sentiment, whereas polar evaluative descriptors provide the decisive classification signal.
+
+<!-- Task 4 below this line (Habir). -->
 
 **TF-IDF baseline.** We represented each review by the TF-IDF weights of the 100 most frequent non-stopwords and trained a Logistic Regression on a stratified 80/20 train/test split (37,730 / 9,433 reviews; IDF and all models fitted on the training part only). With default class weights, the model achieves 86.6% accuracy, but this largely reflects the dominance of positive reviews. Negative recall is only 5.7% (macro F1 0.515, balanced accuracy 0.524). Applying `class_weight="balanced"` increases negative recall to 75.6% and balanced accuracy to 0.687, at the cost of more false positives for the negative class (negative precision 0.234, accuracy 0.636) (\@tbl-tfidf).
 
