@@ -28,13 +28,13 @@ HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until fin
 - Every <!-- FIGURE:start -->
 ```
 
-... <!-- FIGURE:end --> and <!-- TABLE:start --> ... <!-- TABLE:end --> block below is marked so you can mechanically strip them when producing Team-20-text.pdf. See Report/README.md for the two ways to render that second PDF. --\>
+<!-- Task 1-3 below this line (Kira). -->
 
 # Dataset Creation
 
 Customer sentiment serves as a key indicator of product quality, pressing standards, and overall listener experience. However, manually analyzing thousands of reviews is not scalable, making machine learning a valuable tool for automating sentiment detection and uncovering underlying themes. In this project, we analyze the Amazon CDs & Vinyl dataset to classify customer opinions into binary sentiment labels and uncover major thematic patterns.
 
-The Amazon CDs & Vinyl dataset includes numerical ratings (1–5) and corresponding textual reviews. To formulate this as a binary sentiment classification task, ratings of 4 and 5 are labeled as positive (1), while ratings of 3 and below are labeled as negative (0). The primary objective is to predict sentiment labels strictly based on the textual content of each review.
+The Amazon CDs & Vinyl dataset includes numerical ratings (1–5) and corresponding textual reviews. To formulate this as a binary sentiment classification task, ratings of 4 and 5 are labeled as positive (1), while ratings of 3 and below are labeled as negative (0). The primary objective is to predict sentiment labels strictly based on the textual content of each review [@hou2024].
 
 The raw dataset initially contained 50,000 observations. Following the removal of 2,803 duplicate records, the initial deduplicated corpus comprised 47,197 reviews. The dataset displays a distribution notably skewed toward positive feedback: 86.63% of entries correspond to positive ratings (1), while only 13.37% correspond to negative ratings (0), as illustrated in @fig-class-balance.
 
@@ -91,11 +91,12 @@ To measure feature discriminability, Mutual Information was calculated between t
 
 <!-- TABLE:end -->
 
-The mutual information analysis reveals that explicit sentiment adjectives (*"great"*, *"bad"*, *"love"*, *"like"*, *"better"*, *"good"*) carry the highest information gain for separating positive from negative listener ratings. Specifically, *"great"* exhibits the highest mutual information score (\~0.0089), followed by *"bad"* (\~0.0062) and *"love"* (\~0.0059). In contrast, neutral musical nouns (*"record"*, *"sound"*, *"songs"*) possess significantly lower mutual information despite having high raw term frequencies. This demonstrates that domain-specific nouns alone are poor discriminators of sentiment, whereas polar evaluative descriptors provide the decisive classification signal.
+The mutual information analysis reveals that explicit sentiment adjectives (*"great"*, *"bad"*, *"love"*, *"like"*, *"better"*, *"good"*) carry the highest information gain for separating positive from negative listener ratings. 
+Specifically, *"bad"* exhibits the highest mutual information score (~0.0054), followed by *"great"* (~0.0046) and *"like"* (~0.0038). In contrast, neutral musical nouns (*"record"*, *"sound"*, *"songs"*) have substantially lower mutual information scores despite their high frequencies.
 
-<!-- Task 4 below this line (Habir). -->
+<!-- Task 4-5 below this line (Habir). -->
 
-**TF-IDF baseline.** We represented each review by the TF-IDF weights of the 100 most frequent non-stopwords and trained a Logistic Regression on a stratified 80/20 train/test split (37,730 / 9,433 reviews; IDF and all models fitted on the training part only). With default class weights, the model achieves 86.6% accuracy, but this largely reflects the dominance of positive reviews. Negative recall is only 5.7% (macro F1 0.515, balanced accuracy 0.524). Applying `class_weight="balanced"` increases negative recall to 75.6% and balanced accuracy to 0.687, at the cost of more false positives for the negative class (negative precision 0.234, accuracy 0.636) (\@tbl-tfidf).
+**TF-IDF baseline.** We represented each review by the TF-IDF weights of the 100 most frequent non-stopwords and trained a Logistic Regression on a stratified 80/20 train/test split (37,730 / 9,433 reviews; IDF and all models fitted on the training part only). With default class weights, the model achieves 86.6% accuracy, but this largely reflects the dominance of positive reviews. Negative recall is only 5.7% (macro F1 0.515, balanced accuracy 0.524). Applying `class_weight="balanced"` increases negative recall to 75.6% and balanced accuracy to 0.687, at the cost of more false positives for the negative class (negative precision 0.234, accuracy 0.636) [@salton1988].
 
 The coefficients are interpretable: generic praise words (*amazing, great, wonderful*) push towards positive, *bad* towards negative. Notably, *did* and *does* are among the strongest negative features: they are the remains of *didn't/doesn't* once "not" is removed as a stopword, so negation is learned indirectly. Product words (*record, disc, sounds*) are also negative, because complaints often concern the physical product rather than the music.
 
@@ -114,6 +115,7 @@ The coefficients are interpretable: generic praise words (*amazing, great, wonde
 
 <!-- TABLE:start -->
 
+::: {#tbl-w2v}
 |   | Own (CDs & Vinyl) | Pretrained (Google News) |
 |------------------------|------------------------|------------------------|
 | Vocabulary, dimensions | 18,466 words, 100 | 3M words (500k loaded), 300 |
@@ -123,7 +125,8 @@ The coefficients are interpretable: generic praise words (*amazing, great, wonde
 | CV macro F1, mean pooling | 0.688 ± 0.006 | 0.696 ± 0.003 |
 | CV macro F1, IDF-weighted | 0.683 ± 0.004 | 0.682 ± 0.003 |
 
-: Comparison of the two Word2Vec models (5-fold CV on the training set).
+: Comparison of the two Word2Vec models: 5-fold CV on the training set
+:::
 
 <!-- TABLE:end -->
 
@@ -133,13 +136,15 @@ The coefficients are interpretable: generic praise words (*amazing, great, wonde
 
 We projected all 18,466 word vectors of our own model to two dimensions with PCA and FastICA [@hyvarinen2000] and plotted 50 hand-picked words from five groups (@fig-pca-ica). Locally, some structure survives: near-synonyms such as *terrible/awful* and *scratched/skips* stay close (only 15 and 7 of the 2,000 most frequent words lie closer), rock-band roles (*drummer, guitarist, vocalist*) and classical terms (*orchestra, composer, pianist*) form two separate groups, and negative words lie on the same side as defect words (*scratched, skips, waste*), suggesting the first component separates complaints about the product from talk about the music. Globally, however, two dimensions are far too few. The two principal components explain only 13.4% of the variance and only 3% of each word's ten nearest neighbours are preserved. The five groups, clearly separated in the original space (cosine silhouette 0.27), overlap in 2D (silhouette -0.10). Some synonyms are pulled apart: *great* and *excellent* have cosine similarity 0.72, yet 926 words lie closer to *great* in the PCA plot. Positive and negative words are not cleanly separated either, which is expected because Word2Vec groups words used in similar contexts, and *great* and *terrible* occur in very similar ones.
 
-PCA and ICA give the same picture, only mirrored and stretched, with identical neighbour preservation (3.1% vs. 3.2%). This follows from how FastICA works: it first whitens the data with PCA to the requested two dimensions and then only rotates these axes to make them independent, so it cannot recover information that PCA discarded. PCA is the more interpretable of the two here, because its axes are ordered by explained variance.
+PCA and ICA give the same picture, only mirrored and stretched, with identical neighbour preservation (3.1% vs. 3.2%). This follows from how FastICA works: it first whitens the data with PCA to the requested two dimensions and then only rotates these axes to make them independent, so it cannot recover information that PCA discarded. PCA is the more interpretable of the two here, because its axes are ordered by explained variance [@jolliffe2002; @hyvarinen2000].
 
 <!-- FIGURE:start -->
 
 ![PCA (left) and FastICA (right) projections of our own Word2Vec word embeddings, for 50 words from five groups.](images/w2v_pca_ica.png){#fig-pca-ica width="100%"}
 
 <!-- FIGURE:end -->
+
+<!-- Task 6 below this line (Ewa). -->
 
 # Training Procedure
 
@@ -150,27 +155,66 @@ embeddings, your K-Fold cross-validation setup, and your hyperparameter search
 you used (Task 6, first half). -->
 ```
 
+<!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
+
+<!-- Task 7 below this line (Gilbert). -->
+
 # Clustering and Topic Modeling
 
-**Word embedding clustering.** We applied Agglomerative Clustering and DBSCAN to the 2,000 most frequent words from our own Word2Vec model, using cosine distance. DBSCAN (`eps=0.38`, `min_samples=10`) identified 13 clusters with a silhouette score of 0.260, excluding noise points. The clusters captured recognizable semantic groups, including music formats, positive evaluations, instruments, classical music, and purchasing experiences. However, 87.6% of words were classified as noise. The sensitivity analysis (Figure @DBSCAN_sensitivity_analysis) illustrates the trade-off: increasing `eps` reduces noise but causes the largest cluster to dominate, limiting meaningful separation. Agglomerative Clustering (average linkage, 13 clusters) assigned all words to clusters but achieved a silhouette score of only 0.017, with several large, semantically mixed clusters. Thus, DBSCAN identified more coherent local groups, whereas Agglomerative Clustering provided broader but less distinct coverage.
+**Word embedding clustering.** We applied Agglomerative Clustering and DBSCAN to the 2,000 most frequent words from our own Word2Vec model, using cosine distance. DBSCAN (`eps=0.38`, `min_samples=10`) identified 13 clusters with a silhouette score of 0.260, excluding noise points. The clusters captured recognizable semantic groups, including music formats, positive evaluations, instruments, classical music, and purchasing experiences. However, 87.6% of words were classified as noise. The sensitivity analysis (@fig-DBSCAN_sensitivity_analysis) illustrates the trade-off: increasing `eps` reduces noise but causes the largest cluster to dominate, limiting meaningful separation. Agglomerative Clustering (average linkage, 13 clusters) assigned all words to clusters but achieved a silhouette score of only 0.017, with several large, semantically mixed clusters. Thus, DBSCAN identified more coherent local groups, whereas Agglomerative Clustering provided broader but less distinct coverage [@ester1996].
 
 <!-- FIGURE:start -->
 
-![DBSCAN_sensitivity_analysis](images/DBSCAN_sensitivity_analysis.png){#DBSCAN_sensitivity_analysis}
+![DBSCAN sensitivity analysis across epsilon values.](images/DBSCAN_sensitivity_analysis.png){#fig-DBSCAN_sensitivity_analysis}
 
 <!-- FIGURE:end -->
 
-**Topic modeling.** BERTopic and FuzzyTM were applied to a reproducible sample of 10,000 training reviews. BERTopic used the selected 100-dimensional mean Word2Vec document embeddings. Its final configuration identified three topics, but assigned 99.03% of reviews to one generic music-related topic. FuzzyTM used ten topics and fuzzy c-means clustering. To limit memory consumption, terms occurring in fewer than 20 reviews were removed (`min_df=20`), terms occurring in more than 90% of reviews were excluded, and the vocabulary was capped at 1,500 words. After preprocessing, 9,896 documents remained.
+**Topic modeling.** BERTopic and FuzzyTM were applied to a reproducible sample of 10,000 training reviews. BERTopic used the selected 100-dimensional mean Word2Vec document embeddings. Its final configuration identified three topics, but assigned 99.03% of reviews to one generic music-related topic. FuzzyTM used ten topics and fuzzy c-means clustering. To limit memory consumption, terms occurring in fewer than 20 reviews were removed (`min_df=20`), terms occurring in more than 90% of reviews were excluded, and the vocabulary was capped at 1,500 words. After preprocessing, 9,896 documents remained [@grootendorst2022].
 
+:::{#tbl-topic-quality-metric}
 | Topic quality metric | BERTopic | FuzzyTM |
 |----------------------|----------|---------|
 | Number of topics     | 3        | 10      |
 | C_v coherence        | 0.6371   | 0.7294  |
 | Topic diversity      | 0.9667   | 0.5700  |
 
+: Topic quality metric for BERTopic and FuzzyTM.
+:::
+
 **Evaluation.** FuzzyTM achieved higher C_v coherence (0.7294 versus 0.6371) and identified more interpretable topics, particularly around classical compositions, orchestral performances, and musical characteristics. BERTopic achieved higher topic diversity (0.9667 versus 0.5700), but its highly imbalanced topic distribution, with 99.03% of reviews assigned to one generic topic, limited its usefulness. FuzzyTM showed considerable overlap in generic review vocabulary. Overall, FuzzyTM provided more meaningful thematic differentiation for this dataset, although neither method produced consistently distinct topics.
 
-# Evaluation & Discussion
+# Evaluation
+
+We evaluated KNN, Gaussian Naïve Bayes, and Logistic Regression using Word2Vec document embeddings. Stratified 5-fold cross-validation was used for model selection, with macro F1 as the primary metric to account for class imbalance. Final performance was assessed on the held-out test set.
+
+::: {#tbl-model-evaluation}
+| Classifier | CV macro F1 | Test macro F1 | Balanced accuracy | Negative recall |
+|---------------|--------------:|--------------:|--------------:|--------------:|
+| KNN | 0.6223 | 0.6057 | 0.5817 | 0.181 |
+| GaussianNB | 0.4251 | 0.4155 | 0.6155 | 0.852 |
+| Logistic Regression | 0.6514 | 0.6329 | 0.6027 | 0.226 |
+| Logistic Regression (tuned) | **0.6883** | ≈ 0.68 | ≈ 0.80 | ≈ 0.82 |
+
+: Performance comparison of Word2Vec classifiers.
+:::
+
+The tuned Logistic Regression achieved the highest test macro F1 (approximately 0.68), improving upon the untuned model (0.633). GaussianNB achieved the highest negative-class recall (0.852), but its substantially lower macro F1 indicates an unfavorable trade-off between the two classes. KNN performed moderately, while the untuned Logistic Regression showed limited sensitivity to negative reviews.
+
+Compared with the balanced TF-IDF baseline (macro F1 = 0.552), the tuned Word2Vec model provided better overall classification performance. The difference between cross-validation and test performance was relatively small, suggesting reasonable generalization. However, the strong class imbalance remains an important consideration when interpreting these results.
+
+# Discussion & Limitations
+
+The results demonstrate that text representation and model selection substantially influence sentiment classification performance. The tuned Logistic Regression using Word2Vec document embeddings achieved the highest macro F1, outperforming the TF-IDF baseline. This suggests that distributed word representations can capture useful semantic information beyond the limited 100-word vocabulary. However, this comparison does not establish that Word2Vec is generally superior to TF-IDF.
+
+Class imbalance remains a major limitation. The untuned Logistic Regression showed low negative-class recall, while GaussianNB identified more negative reviews at the expense of overall classification performance. This highlights the importance of evaluating macro F1 and class-specific recall rather than accuracy alone.
+
+Dimensionality reduction revealed substantial information loss. Two PCA components explained only 13.4% of the variance and preserved approximately 3% of nearest-neighbour relationships, limiting the interpretability of the 2D projections.
+
+For word embedding clustering, DBSCAN produced more coherent clusters than Agglomerative Clustering (silhouette 0.260 versus 0.017), but classified 87.6% of words as noise. Agglomerative Clustering covered all words but produced less distinct semantic groups. DBSCAN therefore offered better local coherence at the expense of coverage.
+
+For topic modeling, FuzzyTM achieved higher topic coherence than BERTopic (0.729 versus 0.637) and identified more interpretable themes. Although BERTopic achieved greater topic diversity (0.967 versus 0.570), it assigned 99.03% of reviews to one generic topic. FuzzyTM was therefore more useful for thematic exploration, although overlapping vocabulary limited topic distinctiveness.
+
+Further improvements could include testing larger TF-IDF vocabularies, contextual embeddings, alternative document pooling strategies, and decision-threshold optimization. Additional validation on other product categories would help assess generalizability.
 
 ```{=html}
 <!-- TODO: Which representation + model performed best overall, and why. Limitations of
@@ -178,8 +222,6 @@ your approach (e.g. mean-pooled embeddings lose word order, corpus size limits f
 own Word2Vec, DBSCAN's sensitivity to eps, FuzzyTM memory constraints). Concrete
 suggestions for improvement (Task 8). -->
 ```
-
-<!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
 
 # References
 
@@ -200,3 +242,15 @@ report and code, per your course's academic integrity policy. Excluded from the 
 count but must be present. Check the exact wording your course expects for this
 statement — it was not reproduced in full in the assignment PDF text extracted here. -->
 ```
+
+During the preparation of this assignment, the group used **ChatGPT (GPT-6) & Claude (5.5-sonnet)** as a support tool to improve documentation quality, resolve technical coding issues, and enhance writing clarity. The tool was specifically applied to assist in:
+
+- explaining and documenting the tasks necessary to perform for this assignment,
+
+- refining the structure and clarity of written report sections, and
+
+- providing feedback on code documentation and debugging of specific tasks.
+
+All AI-assisted outputs were critically reviewed, verified, and edited by the group members, **Abdulhabir Karahanli, Kíra Kollár, Ewa Kurowska and Gilbert Laanen**, to ensure correctness, academic integrity, and compliance with the course’s AI-Index Level 4 guidelines.
+
+ChatGPT & Claude were used strictly as a supportive assistants, not as a content generator. The final analyses, designs, and interpretations were produced, validated, and approved by the team. Consequently, the authors take full responsibility for the accuracy and originality of all content included in this report.
