@@ -155,7 +155,7 @@ you used (Task 6, first half). -->
 <!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
 ```
 
-git add Report/Team-20.qmd Report/Team-20.pdf git merge --continuegit add Report/Team-20.qmd Report/Team-20.pdf git merge --continuegit add Report/Team-20.qmd Report/Team-20.pdf git merge --continue<!-- Task 7 below this line (Gilbert). -->
+<!-- Task 7 below this line (Gilbert). -->
 
 # Clustering and Topic Modeling
 
