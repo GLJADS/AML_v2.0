@@ -1,0 +1,4 @@
+projection,kNN_preserved@10 (top-2000 words),silhouette of 5 word groups (2D)
+PCA,0.031,-0.102
+FastICA,0.032,-0.102
+original 100-D (cosine),1.0,0.267

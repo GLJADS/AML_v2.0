@@ -1,0 +1,4 @@
+model,type_coverage,token_coverage
+Own (CDs & Vinyl),0.263,0.976
+"Pretrained, exact lookup",0.472,0.869
+"Pretrained, case-insensitive lookup",0.669,0.99
