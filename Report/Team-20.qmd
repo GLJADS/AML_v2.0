@@ -28,8 +28,6 @@ HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until fin
 - Every <!-- FIGURE:start -->
 ```
 
-<!-- Task 1-3 below this line (Kira). -->
-
 # Dataset Creation
 
 Customer sentiment serves as a key indicator of product quality, pressing standards, and overall listener experience. However, manually analyzing thousands of reviews is not scalable, making machine learning a valuable tool for automating sentiment detection and uncovering underlying themes. In this project, we analyze the Amazon CDs & Vinyl dataset to classify customer opinions into binary sentiment labels and uncover major thematic patterns.
@@ -38,11 +36,11 @@ The Amazon CDs & Vinyl dataset includes numerical ratings (1–5) and correspond
 
 The raw dataset initially contained 50,000 observations. Following the removal of 2,803 duplicate records, the initial deduplicated corpus comprised 47,197 reviews. The dataset displays a distribution notably skewed toward positive feedback: 86.63% of entries correspond to positive ratings (1), while only 13.37% correspond to negative ratings (0), as illustrated in @fig-class-balance.
 
-<!-- TABLE:start -->
+<!-- FIGURE:start -->
 
 ![Distribution of sentiment labels in the CDs & Vinyl dataset](images/class_balance.png){#fig-class-balance width="50%"}
 
-<!-- TABLE:end -->
+<!-- FIGUREE:end -->
 
 # Preprocessing
 
@@ -60,12 +58,16 @@ Regarding whether all reviews should be included in the analysis, non-informativ
 
 Descriptive statistics were computed across the retained tokenized corpus prior to stopword filtering to assess review lengths and vocabulary dispersion.
 
+<!-- TABLE:start -->
+
 |  |  |  |
 |------------------------|------------------------|------------------------|
 | **Number of reviews** | **Average words per review** | **Number of unique words** |
 | 47,163 | 81.00 | 70,094 |
 
 : Descriptive statistics of the preprocessed corpus.
+
+<!-- TABLE:start -->
 
 The corpus contains 47,163 observations with an average of 81.00 words per review and a rich vocabulary of 70,094 unique words. A word cloud was generated to visualize the most frequently occurring terms, confirming domain relevance and identifying potential sources of syntactic noise, as shown in @fig-top50-words.
 
@@ -85,15 +87,13 @@ Stopwords were removed using scikit-learn's built-in English stopword list. Afte
 
 To measure feature discriminability, Mutual Information was calculated between these 100 words and the target sentiment label. The top 20 most informative words are shown in @fig-mutual-info.
 
-<!-- TABLE:start -->
+<!-- FIGURE:start -->
 
 ![Top 20 most informative words ranked by Mutual Information.](images/top20_mutual_information.png){#fig-mutual-info width="80%"}
 
-<!-- TABLE:end -->
+<!-- FIGURE:end -->
 
 The mutual information analysis reveals that explicit sentiment adjectives (*"great"*, *"bad"*, *"love"*, *"like"*, *"better"*, *"good"*) carry the highest information gain for separating positive from negative listener ratings. Specifically, *"bad"* exhibits the highest mutual information score (\~0.0054), followed by *"great"* (\~0.0046) and *"like"* (\~0.0038). In contrast, neutral musical nouns (*"record"*, *"sound"*, *"songs"*) have substantially lower mutual information scores despite their high frequencies.
-
-<!-- Task 4-5 below this line (Habir). -->
 
 **TF-IDF baseline.** We represented each review by the TF-IDF weights of the 100 most frequent non-stopwords and trained a Logistic Regression on a stratified 80/20 train/test split (37,730 / 9,433 reviews; IDF and all models fitted on the training part only). With default class weights, the model achieves 86.6% accuracy, but this largely reflects the dominance of positive reviews. Negative recall is only 5.7% (macro F1 0.515, balanced accuracy 0.524). Applying `class_weight="balanced"` increases negative recall to 75.6% and balanced accuracy to 0.687, at the cost of more false positives for the negative class (negative precision 0.234, accuracy 0.636) [@salton1988].
 
@@ -110,7 +110,7 @@ The coefficients are interpretable: generic praise words (*amazing, great, wonde
 
 <!-- TABLE:end -->
 
-**Word2Vec: own vs. pretrained.** We trained our own skip-gram Word2Vec (100 dimensions, window 5, `min_count` 5, 10 epochs) on the training reviews *with* stopwords, so that negations and local context are kept, and compared it with the pretrained `word2vec-google-news-300` model [@mikolov2013] (@tbl-w2v). The pretrained model is trained on about 100B words and therefore gives stable vectors even for rare words, and it covers more of our vocabulary (99.0% of running words, after a case-insensitive lookup, since it is case-sensitive). However, it encodes the *general* meaning of words: its neighbours of *pressing* are *pushing* and *urgent*, and of *skips* are *avoids* and *cancels*. Our own model learns the domain meaning (*pressing* → vinyl, defect, reissue; *skips* → scratches, defect), is three times smaller, and still covers 97.6% of running words; its weakness is that the small corpus leaves rare words (mostly artist names) out or poorly estimated. In a 5-fold stratified cross-validation on the training set, a balanced Logistic Regression scores a macro F1 of 0.696 on pretrained and 0.688 on own embeddings. We prefer **our own model**: the gap is small (about 1.5 standard deviations), and the own model captures the product-related meanings that drive complaints, is far lighter to deploy (the pretrained table would add about 600 MB to the saved model), and is the model we analyse in the following sections.
+**Word2Vec: own vs. pretrained.** We trained our own skip-gram Word2Vec (100 dimensions, window 5, `min_count` 5, 10 epochs) on the training reviews *with* stopwords, so that negations and local context are kept, and compared it with the pretrained `word2vec-google-news-300` model [@mikolov2013] (@tbl-w2v). The pretrained model is trained on about 100B words and therefore gives stable vectors even for rare words, and it covers more of our vocabulary (99.0% of running words, after a case-insensitive lookup, since it is case-sensitive). However, it encodes the *general* meaning of words: its neighbours of *pressing* are *pushing* and *urgent*, and of *skips* are *avoids* and *cancels*. Our custom-trained model learns the domain meaning (*pressing* → vinyl, defect, reissue; *skips* → scratches, defect), is three times smaller, and still covers 97.6% of running words; its weakness is that the small corpus leaves rare words (mostly artist names) out or poorly estimated. In a 5-fold stratified cross-validation on the training set, a balanced Logistic Regression scores a macro F1 of 0.696 on pretrained and 0.688 on own embeddings. We prefer **our custom model**: the gap is small (about 1.5 standard deviations), and the custom model captures the product-related meanings that drive complaints, is far lighter to deploy (the pretrained table would add about 600 MB to the saved model), and is the model we analyse in the following sections.
 
 <!-- TABLE:start -->
 
@@ -133,17 +133,15 @@ The coefficients are interpretable: generic praise words (*amazing, great, wonde
 
 # Feature Selection and Dimensionality Reduction
 
-We projected all 18,466 word vectors of our own model to two dimensions with PCA and FastICA [@hyvarinen2000] and plotted 50 hand-picked words from five groups (@fig-pca-ica). Locally, some structure survives: near-synonyms such as *terrible/awful* and *scratched/skips* stay close (only 15 and 7 of the 2,000 most frequent words lie closer), rock-band roles (*drummer, guitarist, vocalist*) and classical terms (*orchestra, composer, pianist*) form two separate groups, and negative words lie on the same side as defect words (*scratched, skips, waste*), suggesting the first component separates complaints about the product from talk about the music. Globally, however, two dimensions are far too few. The two principal components explain only 13.4% of the variance and only 3% of each word's ten nearest neighbours are preserved. The five groups, clearly separated in the original space (cosine silhouette 0.27), overlap in 2D (silhouette -0.10). Some synonyms are pulled apart: *great* and *excellent* have cosine similarity 0.72, yet 926 words lie closer to *great* in the PCA plot. Positive and negative words are not cleanly separated either, which is expected because Word2Vec groups words used in similar contexts, and *great* and *terrible* occur in very similar ones.
+We projected all 18,466 word vectors of our custom model to two dimensions with PCA and FastICA [@hyvarinen2000] and plotted 50 hand-picked words from five groups (@fig-pca-ica). Locally, some structure survives: near-synonyms such as *terrible/awful* and *scratched/skips* stay close (only 15 and 7 of the 2,000 most frequent words lie closer), rock-band roles (*drummer, guitarist, vocalist*) and classical terms (*orchestra, composer, pianist*) form two separate groups, and negative words lie on the same side as defect words (*scratched, skips, waste*), suggesting the first component separates complaints about the product from talk about the music. Globally, however, two dimensions are far too few. The two principal components explain only 13.4% of the variance and only 3% of each word's ten nearest neighbours are preserved. The five groups, clearly separated in the original space (cosine silhouette 0.27), overlap in 2D (silhouette -0.10). Some synonyms are pulled apart: *great* and *excellent* have cosine similarity 0.72, yet 926 words lie closer to *great* in the PCA plot. Positive and negative words are not cleanly separated either, which is expected because Word2Vec groups words used in similar contexts, and *great* and *terrible* occur in very similar ones.
 
-PCA and ICA give the same picture, only mirrored and stretched, with identical neighbour preservation (3.1% vs. 3.2%). This follows from how FastICA works: it first whitens the data with PCA to the requested two dimensions and then only rotates these axes to make them independent, so it cannot recover information that PCA discarded. PCA is the more interpretable of the two here, because its axes are ordered by explained variance [@jolliffe2002; @hyvarinen2000].
+PCA and ICA give the same picture, only mirrored and stretched, with identical neighbour preservation (3.1% vs. 3.2%). This follows from the fact that FastICA relies on PCA whitening as an initial step before optimizing for statistical independence via rotation; consequently, it cannot recover variance already discarded during the initial two-component projection. PCA is the more interpretable of the two here, because its axes are ordered by explained variance [@jolliffe2002; @hyvarinen2000].
 
 <!-- FIGURE:start -->
 
 ![PCA (left) and FastICA (right) projections of our own Word2Vec word embeddings, for 50 words from five groups.](images/w2v_pca_ica.png){#fig-pca-ica width="100%"}
 
 <!-- FIGURE:end -->
-
-<!-- Task 6 below this line (Ewa). -->
 
 # Training Procedure
 
@@ -163,8 +161,6 @@ To improve performance, GridSearchCV was applied to Logistic Regression using fi
 
 The best configuration was achieved on regularization equal to 10 and balanced class weight, with a mean cross-validation macro F-1 score of 0.6883. When evaluated on the held-out test set, the tuned model achieved approximately 78% accuracy and a macro F-1 score of 0.68. It's negative-class recall increased to 82%, while positive-class recall decreased to 77%.
 
-<!-- Task 7 below this line (Gilbert). -->
-
 # Clustering and Topic Modeling
 
 **Word embedding clustering.** We applied Agglomerative Clustering and DBSCAN to the 2,000 most frequent words from our own Word2Vec model, using cosine distance. DBSCAN (`eps=0.38`, `min_samples=10`) identified 13 clusters with a silhouette score of 0.260, excluding noise points. The clusters captured recognizable semantic groups, including music formats, positive evaluations, instruments, classical music, and purchasing experiences. However, 87.6% of words were classified as noise. The sensitivity analysis (@fig-DBSCAN_sensitivity_analysis) illustrates the trade-off: increasing `eps` reduces noise but causes the largest cluster to dominate, limiting meaningful separation. Agglomerative Clustering (average linkage, 13 clusters) assigned all words to clusters but achieved a silhouette score of only 0.017, with several large, semantically mixed clusters. Thus, DBSCAN identified more coherent local groups, whereas Agglomerative Clustering provided broader but less distinct coverage [@ester1996].
@@ -177,6 +173,8 @@ The best configuration was achieved on regularization equal to 10 and balanced c
 
 **Topic modeling.** BERTopic and FuzzyTM were applied to a reproducible sample of 10,000 training reviews. BERTopic used the selected 100-dimensional mean Word2Vec document embeddings. Its final configuration identified three topics, but assigned 99.03% of reviews to one generic music-related topic. FuzzyTM used ten topics and fuzzy c-means clustering. To limit memory consumption, terms occurring in fewer than 20 reviews were removed (`min_df=20`), terms occurring in more than 90% of reviews were excluded, and the vocabulary was capped at 1,500 words. After preprocessing, 9,896 documents remained [@grootendorst2022].
 
+<!-- TABLE:start -->
+
 ::: {#tbl-topic-quality-metric}
 | Topic quality metric | BERTopic | FuzzyTM |
 |----------------------|----------|---------|
@@ -187,11 +185,15 @@ The best configuration was achieved on regularization equal to 10 and balanced c
 : Topic quality metric for BERTopic and FuzzyTM.
 :::
 
+<!-- TABLE:start -->
+
 **Evaluation.** FuzzyTM achieved higher C_v coherence (0.7294 versus 0.6371) and identified more interpretable topics, particularly around classical compositions, orchestral performances, and musical characteristics. BERTopic achieved higher topic diversity (0.9667 versus 0.5700), but its highly imbalanced topic distribution, with 99.03% of reviews assigned to one generic topic, limited its usefulness. FuzzyTM showed considerable overlap in generic review vocabulary. Overall, FuzzyTM provided more meaningful thematic differentiation for this dataset, although neither method produced consistently distinct topics.
 
 # Evaluation
 
 We evaluated KNN, Gaussian Naïve Bayes, and Logistic Regression using Word2Vec document embeddings. Stratified 5-fold cross-validation was used for model selection, with macro F1 as the primary metric to account for class imbalance. Final performance was assessed on the held-out test set.
+
+<!-- TABLE:start -->
 
 ::: {#tbl-model-evaluation}
 | Classifier | CV macro F1 | Test macro F1 | Balanced accuracy | Negative recall |
@@ -203,6 +205,8 @@ We evaluated KNN, Gaussian Naïve Bayes, and Logistic Regression using Word2Vec 
 
 : Performance comparison of Word2Vec classifiers.
 :::
+
+<!-- TABLE:start -->
 
 The tuned Logistic Regression achieved the highest test macro F1 (approximately 0.68), improving upon the untuned model (0.633). GaussianNB achieved the highest negative-class recall (0.852), but its substantially lower macro F1 indicates an unfavorable trade-off between the two classes. KNN performed moderately, while the untuned Logistic Regression showed limited sensitivity to negative reviews.
 
