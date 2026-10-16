@@ -155,6 +155,14 @@ you used (Task 6, first half). -->
 <!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
 ```
 
+Three classifiers - KNN, GaussianNB, and Logistic Regression - were trained on Word2Vec document representations. Each review was represented by 100-dimensional vector, obtained by averaging the embeddings of its' known words using the custom-trained Word2Vec model.
+
+The dataset was divided into stratified 80/20 train-test split, resulting in 37,770 training reviews and 9,433 test reviews with approximately 86.6% being positive reviews, making both datasets skewed and imbalanced. StandardScaler was included in the KNN and Logistic Regression pipelines to standardize the embedding features. GausianNB was used instead of Multinomial Naive Bayes, because Word2Vec embeddings can contain negative values. GaussianNB supports continuous-valued features and assumes that each feature follows a Gaussian distribution within each class, although this assumption may not fully hold for word embeddings.
+
+To improve performance, GridSearchCV was applied to Logistic Regression using five-fold stratified cross-validation. Grid search was used over randomized search because the hyperparameter space was relatively small. Only four values of the regularization parameter ((C = 0.001, 0.1, 1, 10)) and two class-weighing options (None, balanced) were considered, resulting in just eight possible combinations. Grid search evaluates every combination using cross-validation, making it practical to compare all options systematically. Randomized search is more useful when the hyperparameter space is much larger, as it can reduce computation time by evaluating only a subset of possible combination. In this case, the evaluation of all eight cases was computationally feasible and ensured the best performing configuration within predefined search space.
+
+The best configuration was achieved on regularization equal to 10 and balanced class weight, with a mean cross-validation macro F-1 score of 0.6883. When evaluated on the held-out test set, the tuned model achieved approximately 78% accuracy and a macro F-1 score of 0.68. It's negative-class recall increased to 82%, while positive-class recall decreased to 77%.
+
 <!-- Task 7 below this line (Gilbert). -->
 
 # Clustering and Topic Modeling
