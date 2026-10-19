@@ -18,16 +18,6 @@ format:
       - margin=2cm
 ---
 
-```{=html}
-<!--
-HOW THIS FILE MAPS TO THE ASSIGNMENT (do not delete this comment block until final submission):
-- 9 required report sections below match the brief exactly, not the 8 task numbers.
-- Section 2 (Preprocessing) and Section 3 (Analysis) both come from Task 2 in the notebook.
-- Section 6 (Training procedure) and Section 7 (Evaluation) both come from Task 6.
-- Max length: 6 A4 pages, EXCLUDING figures, tables, references and the Technology Statement.
-- Every <!-- FIGURE:start -->
-```
-
 # Dataset Creation
 
 Customer sentiment serves as a key indicator of product quality, pressing standards, and overall listener experience. However, manually analyzing thousands of reviews is not scalable, making machine learning a valuable tool for automating sentiment detection and uncovering underlying themes. In this project, we analyze the Amazon CDs & Vinyl dataset to classify customer opinions into binary sentiment labels and uncover major thematic patterns.
@@ -40,7 +30,7 @@ The raw dataset initially contained 50,000 observations. Following the removal o
 
 ![Distribution of sentiment labels in the CDs & Vinyl dataset](images/class_balance.png){#fig-class-balance width="50%"}
 
-<!-- FIGUREE:end -->
+<!-- FIGURE:end -->
 
 # Preprocessing
 
@@ -67,7 +57,7 @@ Descriptive statistics were computed across the retained tokenized corpus prior 
 
 : Descriptive statistics of the preprocessed corpus.
 
-<!-- TABLE:start -->
+<!-- TABLE:end -->
 
 The corpus contains 47,163 observations with an average of 81.00 words per review and a rich vocabulary of 70,094 unique words. A word cloud was generated to visualize the most frequently occurring terms, confirming domain relevance and identifying potential sources of syntactic noise, as shown in @fig-top50-words.
 
@@ -145,14 +135,6 @@ PCA and ICA give the same picture, only mirrored and stretched, with identical n
 
 # Training Procedure
 
-```{=html}
-<!-- TODO: KNN / GaussianNB / Logistic Regression setup on the Word2Vec document
-embeddings, your K-Fold cross-validation setup, and your hyperparameter search
-(GridSearchCV/RandomizedSearchCV) on Logistic Regression, including the parameter grid
-you used (Task 6, first half). -->
-<!-- TODO: Report final performance on a held-out test set — NOT the cross-validation search score. Be explicit that these are two different numbers and that the test-set score is what you're claiming as your model's performance. Compare KNN vs GaussianNB vs Logistic Regression, and compare against the TF-IDF baseline from the Feature Representation section (Task 6, second half). -->
-```
-
 Three classifiers - KNN, GaussianNB, and Logistic Regression - were trained on Word2Vec document representations. Each review was represented by 100-dimensional vector, obtained by averaging the embeddings of its' known words using the custom-trained Word2Vec model.
 
 The dataset was divided into stratified 80/20 train-test split, resulting in 37,770 training reviews and 9,433 test reviews with approximately 86.6% being positive reviews, making both datasets skewed and imbalanced. StandardScaler was included in the KNN and Logistic Regression pipelines to standardize the embedding features. GausianNB was used instead of Multinomial Naive Bayes, because Word2Vec embeddings can contain negative values. GaussianNB supports continuous-valued features and assumes that each feature follows a Gaussian distribution within each class, although this assumption may not fully hold for word embeddings.
@@ -185,7 +167,7 @@ The best configuration was achieved on regularization equal to 10 and balanced c
 : Topic quality metric for BERTopic and FuzzyTM.
 :::
 
-<!-- TABLE:start -->
+<!-- TABLE:end -->
 
 **Evaluation.** FuzzyTM achieved higher C_v coherence (0.7294 versus 0.6371) and identified more interpretable topics, particularly around classical compositions, orchestral performances, and musical characteristics. BERTopic achieved higher topic diversity (0.9667 versus 0.5700), but its highly imbalanced topic distribution, with 99.03% of reviews assigned to one generic topic, limited its usefulness. FuzzyTM showed considerable overlap in generic review vocabulary. Overall, FuzzyTM provided more meaningful thematic differentiation for this dataset, although neither method produced consistently distinct topics.
 
@@ -206,7 +188,7 @@ We evaluated KNN, Gaussian Naïve Bayes, and Logistic Regression using Word2Vec 
 : Performance comparison of Word2Vec classifiers.
 :::
 
-<!-- TABLE:start -->
+<!-- TABLE:end -->
 
 The tuned Logistic Regression achieved the highest test macro F1 (approximately 0.68), improving upon the untuned model (0.633). GaussianNB achieved the highest negative-class recall (0.852), but its substantially lower macro F1 indicates an unfavorable trade-off between the two classes. KNN performed moderately, while the untuned Logistic Regression showed limited sensitivity to negative reviews.
 
@@ -226,32 +208,12 @@ For topic modeling, FuzzyTM achieved higher topic coherence than BERTopic (0.729
 
 Further improvements could include testing larger TF-IDF vocabularies, contextual embeddings, alternative document pooling strategies, and decision-threshold optimization. Additional validation on other product categories would help assess generalizability.
 
-```{=html}
-<!-- TODO: Which representation + model performed best overall, and why. Limitations of
-your approach (e.g. mean-pooled embeddings lose word order, corpus size limits for your
-own Word2Vec, DBSCAN's sensitivity to eps, FuzzyTM memory constraints). Concrete
-suggestions for improvement (Task 8). -->
-```
-
 # References
-
-```{=html}
-<!-- TODO: cite scikit-learn, gensim, BERTopic, FuzzyTM, and any papers you reference for
-methodology choices (e.g. the original Word2Vec paper if you discuss it, Amazon Reviews
-2023 dataset paper). Use a consistent citation style. -->
-```
 
 ::: {#refs}
 :::
 
 # Technology Statement
-
-```{=html}
-<!-- TODO: Required statement on which tools/AI assistance you used while producing this
-report and code, per your course's academic integrity policy. Excluded from the 6-page
-count but must be present. Check the exact wording your course expects for this
-statement — it was not reproduced in full in the assignment PDF text extracted here. -->
-```
 
 During the preparation of this assignment, the group used **ChatGPT (GPT-6) & Claude (5.5-sonnet)** as a support tool to improve documentation quality, resolve technical coding issues, and enhance writing clarity. The tool was specifically applied to assist in:
 
