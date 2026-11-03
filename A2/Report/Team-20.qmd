@@ -1,0 +1,143 @@
+---
+title: "Predicting Parkinson's Disease from Clinical Variables: SVM, MLP and a Fuzzy Inference System"
+subtitle: "Advanced Machine Learning 2026 — Assignment 2"
+author:
+  - Abdulhabir Karahanli
+  - Kíra Kollár
+  - Ewa Kurowska
+  - Gilbert Laanen
+date: today
+editor: visual
+format:
+  pdf:
+    number-sections: true
+    toc: true
+    lof: true
+    geometry:
+      - margin=2cm
+bibliography: references.bib
+---
+
+```{=html}
+<!--
+HOW THIS FILE MAPS TO THE ASSIGNMENT:
+- 7 sections below, matching the 7 required sections exactly (not split/merged like A1 was).
+- Max length: 7 A4 pages, EXCLUDING tables and figures. The brief does NOT say references or
+  a technology statement are excluded here (that was an Assignment 1 rule) -- check this with
+  the course before assuming the same applies, Report/README.md has more on this.
+- Every <!-- FIGURE:start -->
+```
+
+... <!-- FIGURE:end --> and <!-- TABLE:start --> ... <!-- TABLE:end --> block is marked so make_text_pdf.py can strip them automatically for Team-20-text.pdf. --\>
+
+# Problem Framing & EDA
+
+```{=html}
+<!-- TODO: define PD vs Non-PD as the target, describe the intended use (e.g. screening/
+triage aid), explain where it fits in that workflow, discuss false-positive vs false-negative
+consequences and state which error type matters more here and why. Then justify your chosen
+evaluation metrics -- make sure this is consistent with F2 being used for thresholding later. -->
+```
+
+<!-- TABLE:start -->
+
+<!-- TODO: class balance table -->
+
+<!-- TABLE:end -->
+
+<!-- FIGURE:start -->
+
+<!-- TODO: key EDA figures (class balance plot, boxplots of standout continuous features, correlation matrix) -->
+
+<!-- FIGURE:end -->
+
+```{=html}
+<!-- TODO: summarize EDA findings in 1-2 paragraphs -- missing values/outliers (or their
+absence), and which variables visibly separate PD from Non-PD. -->
+```
+
+# Preprocessing & Feature Engineering
+
+```{=html}
+<!-- TODO: describe and justify the preprocessing pipeline (scaling for continuous features,
+one-hot encoding for multi-level categoricals, binary flags passed through unchanged), the
+ColumnTransformer/Pipeline setup used to avoid leakage for SVM and MLP, and how the FIS's
+data-dependent settings (membership function ranges) were derived from training data only. -->
+```
+
+# Models
+
+```{=html}
+<!-- TODO: SVM (linear and RBF as candidate configurations within one family), MLP, and the
+FIS. For the FIS specifically: list the 4-6 chosen inputs with a one-line justification each
+(attribute description / literature), the membership functions per input, and the rule base,
+emphasizing source-to-model traceability over clinical accuracy. -->
+```
+
+<!-- FIGURE:start -->
+
+<!-- TODO: FIS membership function plots -->
+
+<!-- FIGURE:end -->
+
+# Validation & Hyperparameter Optimization
+
+```{=html}
+<!-- TODO: cross-validation strategy, the hyperparameter grids searched for SVM (linear + RBF
+combined, <=20 configurations total) and MLP (<=20 configurations), and the FIS's own
+validation procedure (refining on training/validation data only, never touching the test set). -->
+```
+
+<!-- TABLE:start -->
+
+```{=html}
+<!-- TODO: best hyperparameters found per model, and the CV score used to pick them --
+label clearly that this is the search score, not the final reported performance -->
+```
+
+<!-- TABLE:end -->
+
+# Model Selection & Thresholding
+
+```{=html}
+<!-- TODO: explain how validation predictions/scores were obtained (held-out validation split
+or out-of-fold), confirm the same rule (maximize F2 on validation) was applied to all three
+models, report the resulting threshold per model, and state clearly that thresholds were
+frozen before looking at the test set. -->
+```
+
+<!-- TABLE:start -->
+
+```{=html}
+<!-- TODO: per-model frozen-threshold test results -- confusion matrix, recall, precision,
+specificity, F2 -->
+```
+
+<!-- TABLE:end -->
+
+<!-- TODO: compare the three models' test performance and discuss differences. -->
+
+# Decision Support & Practical Value
+
+```{=html}
+<!-- TODO: recommended model and justification from the results above; who uses the output and
+what decision/action it supports; the proposed decision policy connecting score to action;
+cost implications of false positives/negatives in this workflow; the assumptions behind the
+value argument (remember: synthetic data, not clinically validated). -->
+```
+
+# Reflection
+
+```{=html}
+<!-- TODO: what worked best and why (bias-variance, linearity, model capacity, regularization,
+training data volume); challenges encountered and how they were addressed; main limitations
+and concrete future improvements. -->
+```
+
+# References
+
+```{=html}
+<!-- TODO: cite scikit-learn, your FIS library, and any literature referenced for the FIS
+input choices or metric/threshold discussion. references.bib already exists in this folder
+from Assignment 1, add your new entries there. -->
+```
