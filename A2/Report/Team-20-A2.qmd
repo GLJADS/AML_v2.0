@@ -1,0 +1,145 @@
+---
+title: "Predicting Parkinson's Disease from Clinical Variables: SVM, MLP and a Fuzzy Inference System"
+subtitle: "Advanced Machine Learning 2026 — Assignment 2"
+author:
+  - Abdulhabir Karahanli
+  - Kíra Kollár
+  - Ewa Kurowska
+  - Gilbert Laanen
+date: today
+editor: visual
+format:
+  pdf:
+    number-sections: true
+    toc: true
+    lof: true
+    fig-pos: H
+    geometry:
+      - margin=2cm
+bibliography: references.bib
+---
+
+```{=html}
+<!--
+HOW THIS FILE MAPS TO THE ASSIGNMENT:
+- 7 sections below, matching the 7 required sections exactly (not split/merged like A1 was).
+- Max length: 7 A4 pages, EXCLUDING tables and figures. The brief does NOT say references or
+  a technology statement are excluded here (that was an Assignment 1 rule) -- check this with
+  the course before assuming the same applies, Report/README.md has more on this.
+- Every <!-- FIGURE:start -->
+```
+
+# Problem Framing & EDA
+
+The target is `Diagnosis`, with Parkinson's disease (PD, 1) as the positive class and Non-PD (0) as the negative class. A proposed use is a screening/triage aid that flags patients for clinical review, assuming the required measurements are available at that point. A false negative could delay further assessment; a false positive could lead to unnecessary follow-up. For this proposed workflow, missed PD cases are given greater weight. This is a modelling assumption, not an established clinical cost estimate or a validated use case.
+
+Recall measures the proportion of PD cases detected, while precision and specificity describe unnecessary positive flags and correct Non-PD classification. The confusion matrix makes both error types explicit. F2 weights recall more heavily than precision and is the planned validation-based threshold-selection criterion. Accuracy alone would obscure these trade-offs and the unequal class proportions.
+
+After excluding `PatientID` and `DoctorInCharge`, the dataset contains 2,105 rows and 32 predictors. A stratified 80/20 split with `random_state=42` allocates 1,684 rows to training/validation and reserves 421 for final testing. The class balance below and the feature comparisons use training/validation data.
+
+<!-- TABLE:start -->
+
+| Training/validation class | Patients |  Share |
+|:--------------------------|---------:|-------:|
+| PD (1)                    |    1,043 |  61.9% |
+| Non-PD (0)                |      641 |  38.1% |
+| Total                     |    1,684 | 100.0% |
+
+<!-- TABLE:end -->
+
+No missing predictor values were found in training/validation data. The class-specific boxplots (@fig-boxplots) show no visible outliers beyond the 1.5 × IQR whiskers; this does not establish clinical validity of the values. UPDRS, FunctionalAssessment and MoCA show the clearest distributional differences, although the classes still overlap. Their point-biserial correlations with `Diagnosis` are 0.402, -0.219 and -0.165, respectively. All other continuous predictors have \|r\| ≤ 0.070. Pairwise Pearson correlations among continuous predictors are also weak, approximately -0.07 to 0.06 (@fig-correlations). These are descriptive associations, not evidence of causality or final predictive performance.
+
+<!-- FIGURE:start -->
+
+![Continuous feature distributions by diagnosis in the training/validation set.](images/continuous_feature_boxplots.png){#fig-boxplots fig-pos="H"}
+
+![Pairwise Pearson correlations among continuous predictors in the training/validation set.](images/correlation_matrix.png){#fig-correlations fig-pos="H"}
+
+<!-- FIGURE:end -->
+
+# Preprocessing & Feature Engineering
+
+All 32 predictors are retained for SVM and MLP. No constant features were found; `Stroke` has the lowest variation, with 95.0% of training/validation observations sharing one value. This alone does not establish that it lacks predictive information. Weak individual target correlations also do not rule out non-linear relationships or interactions. No imputation, outlier removal, resampling or additional engineered features are applied in the defined preprocessing.
+
+A `ColumnTransformer` standardises 15 continuous predictors with `StandardScaler`, one-hot encodes `Ethnicity` and `EducationLevel` to avoid assuming numerical distances between categories, and passes 15 binary predictors through unchanged as 0/1 values. Standardisation addresses the different numerical scales for SVM and MLP. Both classifiers include this transformer in a `Pipeline`, so fitting through cross-validation learns transformations separately within each training fold. The notebook defines this setup; completed tuning results are not yet available.
+
+The FIS uses separate preprocessing. Its draft input list contains UPDRS, MoCA, FunctionalAssessment, Age and SleepQuality, with the first three supported most clearly by the EDA. The code derives input minima and maxima from `X_trainval` in their original units; membership functions and rules remain unfinished. For validation, any data-dependent ranges or membership parameters must instead be derived from the relevant training fold or split and applied unchanged to its validation data. Full `X_trainval` may be used for the final fit after model selection, without using test data.
+
+One limitation remains: the notebook's initial missing-value, duplicate and descriptive-statistics cell uses the full `df`, including the reserved test rows. Its zero-duplicate result therefore describes the full dataset. These development checks should be restricted to training/validation data before claiming complete test-set isolation; a separate training/validation check already confirms zero missing predictor values.
+
+# Models
+
+```{=html}
+<!-- TODO: SVM (linear and RBF as candidate configurations within one family), MLP, and the
+FIS. For the FIS specifically: list the 4-6 chosen inputs with a one-line justification each
+(attribute description / literature), the membership functions per input, and the rule base,
+emphasizing source-to-model traceability over clinical accuracy. -->
+```
+
+<!-- FIGURE:start -->
+
+<!-- TODO: FIS membership function plots -->
+
+<!-- FIGURE:end -->
+
+# Validation & Hyperparameter Optimization
+
+```{=html}
+<!-- TODO: cross-validation strategy, the hyperparameter grids searched for SVM (linear + RBF
+combined, <=20 configurations total) and MLP (<=20 configurations), and the FIS's own
+validation procedure (refining on training/validation data only, never touching the test set). -->
+```
+
+<!-- TABLE:start -->
+
+```{=html}
+<!-- TODO: best hyperparameters found per model, and the CV score used to pick them --
+label clearly that this is the search score, not the final reported performance -->
+```
+
+<!-- TABLE:end -->
+
+# Model Selection & Thresholding
+
+```{=html}
+<!-- TODO: explain how validation predictions/scores were obtained (held-out validation split
+or out-of-fold), confirm the same rule (maximize F2 on validation) was applied to all three
+models, report the resulting threshold per model, and state clearly that thresholds were
+frozen before looking at the test set. -->
+```
+
+<!-- TABLE:start -->
+
+```{=html}
+<!-- TODO: per-model frozen-threshold test results -- confusion matrix, recall, precision,
+specificity, F2 -->
+```
+
+<!-- TABLE:end -->
+
+<!-- TODO: compare the three models' test performance and discuss differences. -->
+
+# Decision Support & Practical Value
+
+```{=html}
+<!-- TODO: recommended model and justification from the results above; who uses the output and
+what decision/action it supports; the proposed decision policy connecting score to action;
+cost implications of false positives/negatives in this workflow; the assumptions behind the
+value argument (remember: synthetic data, not clinically validated). -->
+```
+
+# Reflection
+
+```{=html}
+<!-- TODO: what worked best and why (bias-variance, linearity, model capacity, regularization,
+training data volume); challenges encountered and how they were addressed; main limitations
+and concrete future improvements. -->
+```
+
+# References
+
+```{=html}
+<!-- TODO: cite scikit-learn, your FIS library, and any literature referenced for the FIS
+input choices or metric/threshold discussion. references.bib already exists in this folder
+from Assignment 1, add your new entries there. -->
+```
