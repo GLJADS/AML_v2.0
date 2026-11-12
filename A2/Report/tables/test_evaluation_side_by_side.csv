@@ -1,0 +1,4 @@
+Model,Frozen Threshold,Val F2,Test Recall,Test Precision,Test Specificity,Test F2,TP,FP,TN,FN
+SVM (RBF),0.26,0.911,0.969,0.776,0.544,0.923,253,73,87,8
+MLP,0.17,0.926,0.992,0.782,0.55,0.942,259,72,88,2
+FIS,0.42,0.909,0.962,0.728,0.412,0.904,251,94,66,10
