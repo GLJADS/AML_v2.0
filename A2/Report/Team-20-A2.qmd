@@ -26,7 +26,7 @@ HOW THIS FILE MAPS TO THE ASSIGNMENT:
 - Max length: 7 A4 pages, EXCLUDING tables and figures. The brief does NOT say references or
   a technology statement are excluded here (that was an Assignment 1 rule) -- check this with
   the course before assuming the same applies, Report/README.md has more on this.
-- Every <!-- FIGURE:start -->
+- Every figure/table is wrapped in the FIGURE/TABLE start/end markers (see README).
 ```
 
 # Problem Framing & EDA
@@ -69,35 +69,75 @@ One limitation remains: the notebook's initial missing-value, duplicate and desc
 
 # Models
 
-```{=html}
-<!-- TODO: SVM (linear and RBF as candidate configurations within one family), MLP, and the
-FIS. For the FIS specifically: list the 4-6 chosen inputs with a one-line justification each
-(attribute description / literature), the membership functions per input, and the rule base,
-emphasizing source-to-model traceability over clinical accuracy. -->
-```
+**SVM.** Linear and RBF kernels are treated as candidate configurations of one SVM family [@cortes1995] and searched in a single grid (Section 4). Each SVC sits in a `Pipeline` behind the Section 2 preprocessor. It is wrapped in `CalibratedClassifierCV(method="sigmoid", ensemble=False)`: Platt scaling [@platt1999], fitted on an internal 5-fold split of the training data. This replaces `SVC(probability=True)`, which is deprecated from scikit-learn 1.9 [@pedregosa2011]. The sigmoid is monotone in the SVM decision value. It therefore leaves the ranking of patients unchanged and only puts the scores on the [0, 1] scale used by the threshold rule in Section 5.
+
+**MLP.** `MLPClassifier` with ReLU hidden layers, Adam (learning rate 0.001) and up to 2,000 iterations, in the same pipeline. Early stopping is switched off so that the L2 penalty `alpha` is the only regulariser and its effect can be read directly from the validation results. A fixed seed makes the weight initialisation reproducible.
+
+**FIS.** A Mamdani system [@mamdani1975] built with scikit-fuzzy [@warner2024] and wrapped as a scikit-learn estimator. It is therefore validated on the same folds and exposes the same `predict_proba` interface as SVM and MLP. It uses four continuous inputs (@tbl-fis-inputs). SleepQuality, proposed in the first draft, was dropped: its PD rate is flat across training-set quintiles (0.59 to 0.66), and the PD literature concerns sleep *disorders*, a binary column.
+
+<!-- TABLE:start -->
+
+| Input | Source | Translated into |
+|:---|:---|:---|
+| UPDRS | Attribute description: higher = more severe; MDS-UPDRS is the standard PD rating scale [@goetz2008] | Higher is abnormal; universe 0–199 |
+| MoCA | Attribute description: lower = cognitive impairment; published cut-off $<$ 26 [@nasreddine2005] | Lower is abnormal; crossover fixed at 26; universe 0–30 |
+| FunctionalAssessment | Attribute description: lower = greater impairment | Lower is abnormal; universe 0–10 |
+| Age | PD prevalence rises from 107 to 428 per 100,000 between ages 50–59 and 60–69 [@pringsheim2014] | Higher is abnormal; source crossover 60; universe 50–90 |
+
+: FIS inputs and their source-to-model translation. {#tbl-fis-inputs}
+
+<!-- TABLE:end -->
+
+Each input has two membership functions, a "normal" and an "abnormal" set, built as complementary trapezoids around a crossover point *c* with transition half-width *h* (@fig-fis-mf). Two sets were chosen over three because the EDA shows a step-like change in PD rate for each clinical score: for example, the PD rate is 0.31 for MoCA $\geq$ 26 and 0.66 below it. The sources fix the direction of each input and, for MoCA, the crossover. The other crossovers are the only data-dependent preprocessing. They are either taken from the sources (scale midpoints where no source gives a value) or learned from the training rows of each fold with a depth-1 decision tree per input (Section 4).
+
+<!-- TABLE:start -->
+
+| Rule | IF | THEN | Rationale |
+|:---|:---|:---|:---|
+| R1 | UPDRS high AND MoCA impaired AND FA impaired | high | Motor severity plus both cognitive and functional impairment |
+| R2 | UPDRS high AND (MoCA impaired OR FA impaired) | medium | Motor severity with one supporting impairment |
+| R3 | UPDRS high AND Age older | medium | Age as main epidemiological risk factor [@pringsheim2014] |
+| R4 | UPDRS low AND MoCA impaired AND FA impaired | medium | Impairment without motor severity |
+| R5 | UPDRS low AND MoCA normal | low | No motor severity, normal cognition |
+| R6 | UPDRS low AND FA normal | low | No motor severity, normal function |
+| R7 | MoCA normal AND FA normal | low | No cognitive or functional impairment |
+
+: FIS rule base. {#tbl-fis-rules}
+
+<!-- TABLE:end -->
+
+The seven rules (@tbl-fis-rules) put UPDRS first, because it is the only input that measures PD-specific motor severity, and treat MoCA, FA and age as supporting evidence. AND is the minimum, OR the maximum, implication clips the output set, and the clipped sets are aggregated by maximum. The output has three triangular sets on [0, 1] and is defuzzified by centroid. Because the centroid of these sets can only lie in [1/6, 5/6], it is rescaled linearly to [0, 1]; this mapping depends on the output sets only, not on data. Since UPDRS low and high always sum to one and the rules condition on both, at least one rule fires for every patient. On 200 training rows, the vectorised implementation matches scikit-fuzzy's control API to within $7 \times 10^{-5}$.
 
 <!-- FIGURE:start -->
 
-<!-- TODO: FIS membership function plots -->
+![Membership functions of the selected FIS, with crossovers learned on the training/validation data (dotted lines), and the output sets.](images/fis_membership_functions.png){#fig-fis-mf}
 
 <!-- FIGURE:end -->
 
 # Validation & Hyperparameter Optimization
 
-```{=html}
-<!-- TODO: cross-validation strategy, the hyperparameter grids searched for SVM (linear + RBF
-combined, <=20 configurations total) and MLP (<=20 configurations), and the FIS's own
-validation procedure (refining on training/validation data only, never touching the test set). -->
-```
+All model development uses the 1,684 training/validation rows only. Every model is evaluated on the same stratified 5-fold split (`shuffle=True`, `random_state=42`), so the scores are directly comparable. Each validation fold keeps the 62/38 class ratio and has about 128 Non-PD patients. All data-dependent steps (scaling, encoding, FIS crossovers, Platt sigmoid) are refitted within each training fold.
+
+The selection criterion is average precision (AP), with recall, F2 and ROC AUC logged as secondary metrics. The decision threshold is fixed later by maximising F2 (Section 5), so selection should reward a good ranking of patients rather than predictions at the default 0.5 cut-off. Selecting on recall at 0.5, as in the first draft, rewards models that flag almost everyone: in our SVM grid, the five RBF configurations with $\gamma$ = 0.5 have the highest recall (0.911 to 0.914) and the lowest AP (0.796 to 0.797).
+
+Each grid was fixed in advance and run once. The SVM family has 20 configurations: linear with C $\in$ {0.001, 0.01, 0.1, 1, 10} and RBF with C $\in$ {0.1, 1, 10, 100, 1000} $\times$ $\gamma \in$ {0.005, 0.05, 0.5}. The $\gamma$ values are 0.1, 1 and 10 times scikit-learn's `scale` heuristic (0.051 on the preprocessed training data). The MLP has 20 configurations: hidden layers {(8), (32), (64), (32, 16)} $\times$ $\alpha \in$ {0.001, 0.01, 0.1, 1, 10}, log-spaced to cover both weak and strong regularisation. For the FIS, the inputs, membership-function count and rules were fixed by the sources. Two design choices remained, and their four combinations were compared on the same folds and criterion: crossovers from the sources or learned per training fold, and half-width *h* of 2.5% or 10% of each universe.
 
 <!-- TABLE:start -->
 
-```{=html}
-<!-- TODO: best hyperparameters found per model, and the CV score used to pick them --
-label clearly that this is the search score, not the final reported performance -->
-```
+| Model | Selected configuration | CV AP (± SD) | CV ROC AUC | Train AP |
+|:---|:---|---:|---:|---:|
+| SVM (RBF), selected | C = 10, $\gamma$ = 0.005 | 0.937 ± 0.017 | 0.907 | 0.956 |
+| SVM (linear), best | C = 10 | 0.932 ± 0.014 | 0.896 | 0.939 |
+| MLP | one layer, 32 units, $\alpha$ = 1 | 0.946 ± 0.014 | 0.920 | 0.988 |
+| FIS | learned crossovers, *h* = 10% | 0.866 ± 0.015 | 0.813 | 0.866 |
+
+: Best configuration per model (5-fold CV search scores on training/validation data; not final test performance). {#tbl-hpo}
 
 <!-- TABLE:end -->
+
+@tbl-hpo summarises the results; all 44 configurations are in `Report/tables/hpo_all_configurations.csv`. The RBF SVM adds little over the linear kernel (0.937 vs 0.932, less than one fold SD). $\gamma$ = 0.5 overfits at every C, with train AP 1.000 against CV AP 0.80. The selected $\gamma$ is the smallest value in the grid, so a smoother kernel might do slightly better, but the budget did not allow widening the grid after seeing the results. For the MLP, $\alpha \leq 0.1$ gives train AP $\approx$ 1.000 with CV AP of 0.91–0.93 for every architecture (high variance). $\alpha$ = 10 lowers both to about 0.93 and 0.92 (high bias), and $\alpha$ = 1 is best for all single-layer networks. For the FIS, crossovers learned on the training folds beat the source and midpoint values (0.866 vs 0.842). This comes mainly from UPDRS, whose learned crossover (49.9) is far from the scale midpoint (99.5). The learned FA and Age crossovers (4.99 and 59.5) land close to the midpoint and the literature value.
+
+These CV scores are search scores. Taking the maximum over 20 noisy estimates is optimistically biased [@cawley2010], and the FIS rule structure was designed after inspecting the training/validation EDA. The test set was not used for any of these choices. The frozen-threshold test evaluation in Section 5 provides the unbiased performance estimate.
 
 # Model Selection & Thresholding
 
