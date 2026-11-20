@@ -141,23 +141,29 @@ These CV scores are search scores. Taking the maximum over 20 noisy estimates is
 
 # Model Selection & Thresholding
 
-```{=html}
-<!-- TODO: explain how validation predictions/scores were obtained (held-out validation split
-or out-of-fold), confirm the same rule (maximize F2 on validation) was applied to all three
-models, report the resulting threshold per model, and state clearly that thresholds were
-frozen before looking at the test set. -->
-```
+To prevent test-set leakage into the decision cut-off, `X_trainval` (1,684 rows) was split using a stratified 80/20 partition into a training subset (`X_train`, 1,347 rows) and a held-out validation subset (`X_val`, 337 rows). The selected configurations from Section 4—SVM (RBF, $C = 10, \gamma = 0.005$), MLP (one hidden layer of 32 units, $\alpha = 1$) and FIS (learned crossovers, $h = 10\%$)—were refitted exclusively on `X_train` and used to score `X_val`[cite: 119, 121].
+
+For every model, the decision threshold $\tau^*$ was chosen by sweeping $\tau \in [0.01, 0.99]$ (99 steps) and selecting the value that maximised validation $F_2$ (@fig-threshold-selection)[cite: 114, 116, 119]. Because $F_2$ weights recall twice as heavily as precision, all three optimal cut-offs fall below the default 0.50: $\tau^* = 0.26$ for SVM ($F_2 = 0.911$), $\tau^* = 0.17$ for MLP ($F_2 = 0.926$) and $\tau^* = 0.42$ for FIS ($F_2 = 0.909$)[cite: 114, 119, 120]. These thresholds were frozen before inspecting `X_test`[cite: 114, 119]. Each selected model was then refitted on the full `X_trainval` set and evaluated once on the 421 held-out test observations (261 PD, 160 Non-PD)[cite: 117, 119].
+
+<!-- FIGURE:start -->
+
+![Validation $F_2$ score across decision thresholds $\tau \in [0.01, 0.99]$ on the held-out validation split, with frozen optimal thresholds $\tau^*$ marked.](images/f2_threshold_selection.png){#fig-threshold-selection}
+
+<!-- FIGURE:end -->
 
 <!-- TABLE:start -->
 
-```{=html}
-<!-- TODO: per-model frozen-threshold test results -- confusion matrix, recall, precision,
-specificity, F2 -->
-```
+| Model | Frozen $\tau^*$ | Val $F_2$ | Test Recall | Test Precision | Test Specificity | Test $F_2$ | TP | FP | TN | FN |
+|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| SVM (RBF) | 0.26 | 0.911 | 0.969 | 0.776 | 0.544 | 0.923 | 253 | 73 | 87 | 8 |
+| MLP | 0.17 | 0.926 | 0.992 | 0.782 | 0.550 | 0.942 | 259 | 72 | 88 | 2 |
+| FIS | 0.42 | 0.909 | 0.962 | 0.728 | 0.412 | 0.904 | 251 | 94 | 66 | 10 |
+
+: Frozen-threshold evaluation on the held-out test set (421 patients: 261 PD, 160 Non-PD). {#tbl-test-results}
 
 <!-- TABLE:end -->
 
-<!-- TODO: compare the three models' test performance and discuss differences. -->
+@tbl-test-results reports the test results. Lowering $\tau^*$ below 0.50 deliberately trades moderate specificity (more false-positive referrals: 72–94 patients) for high sensitivity (96.2%–99.2%), aligning with the screening objective in Section 1[cite: 120, 121]. MLP achieves the strongest test performance on every metric ($F_2 = 0.942$, recall $= 0.992$, precision $= 0.782$, specificity $= 0.550$), missing only 2 of 261 PD cases ($\text{FN} = 2$) while ruling out 88 of 160 Non-PD cases[cite: 119, 120]. SVM (RBF) ranks second ($F_2 = 0.923$, $\text{FN} = 8$)[cite: 119, 120]. The 4-input Mamdani FIS attains comparable recall (0.962) but lower specificity (0.412) and $F_2$ (0.904), as it relies on four coarse two-set clinical rules rather than all 32 predictors[cite: 119, 120]. Its validation curve (@fig-threshold-selection) drops to zero above $\tau \approx 0.63$ because firing the "high risk" rule (R1) requires simultaneous impairment across UPDRS, MoCA and FunctionalAssessment, capping defuzzified risk scores for most patients around medium risk[cite: 116, 120, 121].
 
 # Decision Support & Practical Value
 
