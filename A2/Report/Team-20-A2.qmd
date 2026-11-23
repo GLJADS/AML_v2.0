@@ -177,8 +177,6 @@ Finally, the potential value of this approach depends on several assumptions. He
 
 # Reflection
 
-## 7. Reflection
-
 The MLP achieved the strongest overall performance, with a test F2-score of 0.942, compared to 0.923 for the RBF SVM and 0.904 for the FIS. The RBF SVM slightly outperformed the linear SVM during cross-validation (AP 0.937 versus 0.932), suggesting that nonlinear relationships provided some additional predictive information, although the improvement was limited.
 
 The MLP experiments highlighted the importance of model capacity and regularization. Configurations with weaker regularization (lower alpha values) achieved almost perfect training AP but lower cross-validation performance, suggesting overfitting. The selected configuration (32 hidden neurons, alpha = 1) achieved a better balance between fitting the training data and generalising to unseen data. This illustrates the bias-variance trade-off: increasing model complexity can capture more patterns but may also increase overfitting. The FIS was more interpretable but achieved lower predictive performance, potentially because it used only four input features and seven rules instead of all 32 features.
