@@ -177,15 +177,17 @@ Finally, the potential value of this approach depends on several assumptions. He
 
 # Reflection
 
-The MLP achieved the strongest overall performance, with a test F2-score of 0.942, compared to 0.923 for the RBF SVM and 0.904 for the FIS. This suggests that the MLP was better able to capture patterns in the dataset. The RBF SVM performed similarly, indicating that nonlinear decision boundaries provided some benefit over a linear approach.
+## 7. Reflection
 
-The MLP experiments also demonstrated the importance of regularization. Configurations with weaker regularization achieved almost perfect training Average Precision scores but lower cross-validation performance, suggesting overfitting. The selected configuration (32 hidden neurons, alpha = 1) achieved a better balance between training and validation performance. The FIS offered greater interpretability through its rules, but its restricted input features and simpler structure may have limited its predictive performance.
+The MLP achieved the strongest overall performance, with a test F2-score of 0.942, compared to 0.923 for the RBF SVM and 0.904 for the FIS. The RBF SVM slightly outperformed the linear SVM during cross-validation (AP 0.937 versus 0.932), suggesting that nonlinear relationships provided some additional predictive information, although the improvement was limited.
 
-One challenge was comparing models with different structures and levels of complexity. This was addressed by evaluating them using the same dataset splits and performance metrics. Another challenge was selecting suitable decision thresholds. Instead of using the default threshold of 0.5, thresholds were selected by maximising F2 on validation data, prioritising recall. This allowed the models to be compared in the context of the assignment's screening-oriented objective while keeping the test set separate.
+The MLP experiments highlighted the importance of model capacity and regularization. Configurations with weaker regularization (lower alpha values) achieved almost perfect training AP but lower cross-validation performance, suggesting overfitting. The selected configuration (32 hidden neurons, alpha = 1) achieved a better balance between fitting the training data and generalising to unseen data. This illustrates the bias-variance trade-off: increasing model complexity can capture more patterns but may also increase overfitting. The FIS was more interpretable but achieved lower predictive performance, potentially because it used only four input features and seven rules instead of all 32 features.
 
-The main limitation is that the dataset is synthetic, so the results may not reflect performance on real patients. Furthermore, the relatively low specificity means that many patients without Parkinson's Disease would be incorrectly flagged. Future work could evaluate the models on real clinical data, investigate feature selection and probability calibration, and explore ways to improve specificity without substantially reducing recall. The FIS could also be refined with additional inputs or rules to improve its predictive performance while retaining interpretability.
+One challenge was designing and tuning the FIS, particularly selecting suitable input features, membership functions and rules. Its limited number of rules made it difficult to represent the relationships captured by the other models. Another challenge was selecting decision thresholds. This was addressed by maximising F2 on a separate validation set and keeping the selected thresholds fixed for the final test evaluation.
 
-Overall, the experiment demonstrated that model selection involves balancing predictive performance, interpretability and practical consequences rather than relying on a single metric.
+The main limitation is the use of a synthetic dataset, meaning the results may not generalise to real patients. Additionally, the relatively low specificity of all models results in many false positives. Future work could evaluate the models on real clinical data, investigate additional FIS features and rules, and explore methods to improve specificity while maintaining high recall. More extensive data and external validation would also help assess whether the observed performance generalises beyond this dataset.
+
+Overall, the experiment demonstrated the importance of balancing predictive performance, model complexity and interpretability when selecting a model for decision support.
 
 # References
 
