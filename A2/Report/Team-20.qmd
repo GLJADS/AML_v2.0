@@ -1,6 +1,6 @@
 ---
 title: "Predicting Parkinson's Disease from Clinical Variables: SVM, MLP and a Fuzzy Inference System"
-subtitle: "Advanced Machine Learning 2026 — Assignment 2"
+subtitle: "Advanced Machine Learning 2026, Assignment 2"
 author:
   - Abdulhabir Karahanli
   - Kíra Kollár
@@ -14,6 +14,7 @@ format:
     toc: true
     lof: true
     fig-pos: H
+    papersize: a4
     geometry:
       - margin=2cm
 bibliography: references.bib
@@ -35,7 +36,7 @@ The target is `Diagnosis`, with Parkinson's disease (PD, 1) as the positive clas
 
 Recall measures the proportion of PD cases detected, while precision and specificity describe unnecessary positive flags and correct Non-PD classification. The confusion matrix makes both error types explicit. F2 weights recall more heavily than precision and is the planned validation-based threshold-selection criterion. Accuracy alone would obscure these trade-offs and the unequal class proportions.
 
-After excluding `PatientID` and `DoctorInCharge`, the dataset contains 2,105 rows and 32 predictors. A stratified 80/20 split with `random_state=42` allocates 1,684 rows to training/validation and reserves 421 for final testing. The class balance below and the feature comparisons use training/validation data.
+After excluding `PatientID` and `DoctorInCharge`, the dataset contains 2,105 rows and 32 predictors. A stratified 80/20 split with `random_state=42` allocates 1,684 rows to training/validation and reserves 421 for final testing. The class balance (@tbl-class-balance) and the feature comparisons use training/validation data.
 
 <!-- TABLE:start -->
 
@@ -45,9 +46,11 @@ After excluding `PatientID` and `DoctorInCharge`, the dataset contains 2,105 row
 | Non-PD (0)                |      641 |  38.1% |
 | Total                     |    1,684 | 100.0% |
 
+: Class balance in the training/validation set. {#tbl-class-balance}
+
 <!-- TABLE:end -->
 
-No missing predictor values were found in training/validation data. The class-specific boxplots (@fig-boxplots) show no visible outliers beyond the 1.5 × IQR whiskers; this does not establish clinical validity of the values. UPDRS, FunctionalAssessment and MoCA show the clearest distributional differences, although the classes still overlap. Their point-biserial correlations with `Diagnosis` are 0.402, -0.219 and -0.165, respectively. All other continuous predictors have \|r\| ≤ 0.070. Pairwise Pearson correlations among continuous predictors are also weak, approximately -0.07 to 0.06 (@fig-correlations). These are descriptive associations, not evidence of causality or final predictive performance.
+No missing predictor values were found in training/validation data. The class-specific boxplots (@fig-boxplots) show no visible outliers beyond the 1.5 × IQR whiskers; this does not establish clinical validity of the values. UPDRS, FunctionalAssessment and MoCA show the clearest distributional differences, although the classes still overlap. Their point-biserial correlations with `Diagnosis` are 0.402, -0.219 and -0.165, respectively. All other continuous predictors have \|r\| $\leq$ 0.070. Pairwise Pearson correlations among continuous predictors are also weak, approximately -0.07 to 0.06 (@fig-correlations). These are descriptive associations, not evidence of causality or final predictive performance.
 
 <!-- FIGURE:start -->
 
@@ -69,7 +72,7 @@ One limitation remains: the notebook's initial missing-value, duplicate and desc
 
 # Models
 
-**SVM.** Linear and RBF kernels are treated as candidate configurations of one SVM family [@cortes1995] and searched in a single grid (Section 4). Each SVC sits in a `Pipeline` behind the Section 2 preprocessor. It is wrapped in `CalibratedClassifierCV(method="sigmoid", ensemble=False)`: Platt scaling [@platt1999], fitted on an internal 5-fold split of the training data. This replaces `SVC(probability=True)`, which is deprecated from scikit-learn 1.9 [@pedregosa2011]. The sigmoid is monotone in the SVM decision value. It therefore leaves the ranking of patients unchanged and only puts the scores on the [0, 1] scale used by the threshold rule in Section 5.
+**SVM.** Linear and RBF kernels are treated as candidate configurations of one SVM family [@cortes1995] and searched in a single grid (Section 4). Each SVC sits in a `Pipeline` behind the Section 2 preprocessor. It is wrapped in `CalibratedClassifierCV(method="sigmoid", ensemble=False)`: Platt scaling [@platt1999], fitted on an internal 5-fold split of the training data. This replaces `SVC(probability=True)`, which is deprecated from scikit-learn 1.9 [@pedregosa2011]. The sigmoid is monotone in the SVM decision value. It therefore leaves the ranking of patients unchanged and only puts the scores on the \[0, 1\] scale used by the threshold rule in Section 5.
 
 **MLP.** `MLPClassifier` with ReLU hidden layers, Adam (learning rate 0.001) and up to 2,000 iterations, in the same pipeline. Early stopping is switched off so that the L2 penalty `alpha` is the only regulariser and its effect can be read directly from the validation results. A fixed seed makes the weight initialisation reproducible.
 
@@ -78,7 +81,7 @@ One limitation remains: the notebook's initial missing-value, duplicate and desc
 <!-- TABLE:start -->
 
 | Input | Source | Translated into |
-|:---|:---|:---|
+|:-----------------------|:-----------------------|:-----------------------|
 | UPDRS | Attribute description: higher = more severe; MDS-UPDRS is the standard PD rating scale [@goetz2008] | Higher is abnormal; universe 0–199 |
 | MoCA | Attribute description: lower = cognitive impairment; published cut-off $<$ 26 [@nasreddine2005] | Lower is abnormal; crossover fixed at 26; universe 0–30 |
 | FunctionalAssessment | Attribute description: lower = greater impairment | Lower is abnormal; universe 0–10 |
@@ -93,7 +96,7 @@ Each input has two membership functions, a "normal" and an "abnormal" set, built
 <!-- TABLE:start -->
 
 | Rule | IF | THEN | Rationale |
-|:---|:---|:---|:---|
+|:-----------------|:-----------------|:-----------------|:-----------------|
 | R1 | UPDRS high AND MoCA impaired AND FA impaired | high | Motor severity plus both cognitive and functional impairment |
 | R2 | UPDRS high AND (MoCA impaired OR FA impaired) | medium | Motor severity with one supporting impairment |
 | R3 | UPDRS high AND Age older | medium | Age as main epidemiological risk factor [@pringsheim2014] |
@@ -106,7 +109,7 @@ Each input has two membership functions, a "normal" and an "abnormal" set, built
 
 <!-- TABLE:end -->
 
-The seven rules (@tbl-fis-rules) put UPDRS first, because it is the only input that measures PD-specific motor severity, and treat MoCA, FA and age as supporting evidence. AND is the minimum, OR the maximum, implication clips the output set, and the clipped sets are aggregated by maximum. The output has three triangular sets on [0, 1] and is defuzzified by centroid. Because the centroid of these sets can only lie in [1/6, 5/6], it is rescaled linearly to [0, 1]; this mapping depends on the output sets only, not on data. Since UPDRS low and high always sum to one and the rules condition on both, at least one rule fires for every patient. On 200 training rows, the vectorised implementation matches scikit-fuzzy's control API to within $7 \times 10^{-5}$.
+The seven rules (@tbl-fis-rules) put UPDRS first, because it is the only input that measures PD-specific motor severity, and treat MoCA, FA and age as supporting evidence. AND is the minimum, OR the maximum, implication clips the output set, and the clipped sets are aggregated by maximum. The output has three triangular sets on \[0, 1\] and is defuzzified by centroid. Because the centroid of these sets can only lie in \[1/6, 5/6\], it is rescaled linearly to \[0, 1\]; this mapping depends on the output sets only, not on data. Since UPDRS low and high always sum to one and the rules condition on both, at least one rule fires for every patient. On 200 training rows, the vectorised implementation matches scikit-fuzzy's control API to within $7 \times 10^{-5}$.
 
 <!-- FIGURE:start -->
 
@@ -125,7 +128,7 @@ Each grid was fixed in advance and run once. The SVM family has 20 configuration
 <!-- TABLE:start -->
 
 | Model | Selected configuration | CV AP (± SD) | CV ROC AUC | Train AP |
-|:---|:---|---:|---:|---:|
+|:--------------|:--------------|--------------:|--------------:|--------------:|
 | SVM (RBF), selected | C = 10, $\gamma$ = 0.005 | 0.937 ± 0.017 | 0.907 | 0.956 |
 | SVM (linear), best | C = 10 | 0.932 ± 0.014 | 0.896 | 0.939 |
 | MLP | one layer, 32 units, $\alpha$ = 1 | 0.946 ± 0.014 | 0.920 | 0.988 |
@@ -141,45 +144,53 @@ These CV scores are search scores. Taking the maximum over 20 noisy estimates is
 
 # Model Selection & Thresholding
 
-```{=html}
-<!-- TODO: explain how validation predictions/scores were obtained (held-out validation split
-or out-of-fold), confirm the same rule (maximize F2 on validation) was applied to all three
-models, report the resulting threshold per model, and state clearly that thresholds were
-frozen before looking at the test set. -->
-```
+To prevent test-set leakage into the decision cut-off, `X_trainval` (1,684 rows) was split using a stratified 80/20 partition into a training subset (`X_train`, 1,347 rows) and a held-out validation subset (`X_val`, 337 rows). The selected configurations from Section 4 (SVM: RBF, $C = 10, \gamma = 0.005$; MLP: one hidden layer of 32 units, $\alpha = 1$; FIS: learned crossovers, $h = 10\%$) were refitted exclusively on `X_train` and used to score `X_val`.
+
+For every model, the decision threshold $\tau^*$ was chosen by sweeping $\tau \in [0.01, 0.99]$ (99 steps) and selecting the value that maximised validation $F_2$ (@fig-threshold-selection). Because $F_2$ weights recall twice as heavily as precision, all three optimal cut-offs fall below the default 0.50: $\tau^* = 0.26$ for SVM ($F_2 = 0.911$), $\tau^* = 0.17$ for MLP ($F_2 = 0.926$) and $\tau^* = 0.42$ for FIS ($F_2 = 0.909$). These thresholds were frozen before inspecting `X_test`. Each selected model was then refitted on the full `X_trainval` set and evaluated once on the 421 held-out test observations (261 PD, 160 Non-PD).
+
+<!-- FIGURE:start -->
+
+![Validation $F_2$ score across decision thresholds $\tau \in [0.01, 0.99]$ on the held-out validation split, with frozen optimal thresholds $\tau^*$ marked.](images/f2_threshold_selection.png){#fig-threshold-selection}
+
+<!-- FIGURE:end -->
 
 <!-- TABLE:start -->
 
-```{=html}
-<!-- TODO: per-model frozen-threshold test results -- confusion matrix, recall, precision,
-specificity, F2 -->
-```
+| Model | Frozen $\tau^*$ | Val $F_2$ | Test Recall | Test Precision | Test Specificity | Test $F_2$ | TP | FP | TN | FN |
+|:------|------:|------:|------:|------:|------:|------:|------:|------:|------:|------:|
+| SVM (RBF) | 0.26 | 0.911 | 0.969 | 0.776 | 0.544 | 0.923 | 253 | 73 | 87 | 8 |
+| MLP | 0.17 | 0.926 | 0.992 | 0.782 | 0.550 | 0.942 | 259 | 72 | 88 | 2 |
+| FIS | 0.42 | 0.909 | 0.962 | 0.728 | 0.412 | 0.904 | 251 | 94 | 66 | 10 |
+
+: Frozen-threshold evaluation on the held-out test set (421 patients: 261 PD, 160 Non-PD). {#tbl-test-results}
 
 <!-- TABLE:end -->
 
-<!-- TODO: compare the three models' test performance and discuss differences. -->
+@tbl-test-results reports the test results. Lowering $\tau^*$ below 0.50 deliberately trades moderate specificity (more false-positive referrals: 72–94 patients) for high sensitivity (96.2%–99.2%), aligning with the screening objective in Section 1. MLP achieves the strongest test performance on every metric ($F_2 = 0.942$, recall $= 0.992$, precision $= 0.782$, specificity $= 0.550$), missing only 2 of 261 PD cases ($\text{FN} = 2$) while ruling out 88 of 160 Non-PD cases. SVM (RBF) ranks second ($F_2 = 0.923$, $\text{FN} = 8$). The 4-input Mamdani FIS attains comparable recall (0.962) but lower specificity (0.412) and $F_2$ (0.904), as it relies on four coarse two-set clinical rules rather than all 32 predictors. Its validation curve (@fig-threshold-selection) drops to zero above $\tau \approx 0.63$ because firing the "high risk" rule (R1) requires simultaneous impairment across UPDRS, MoCA and FunctionalAssessment, capping defuzzified risk scores for most patients around medium risk.
 
 # Decision Support & Practical Value
 
-```{=html}
-<!-- TODO: recommended model and justification from the results above; who uses the output and
-what decision/action it supports; the proposed decision policy connecting score to action;
-cost implications of false positives/negatives in this workflow; the assumptions behind the
-value argument (remember: synthetic data, not clinically validated). -->
-```
+Based on the held-out test results, the **MLP is the recommended model** for the workflow defined in Section 1. It achieved the highest F2-score (0.942), recall (0.992) and precision (0.782) among the evaluated models. At its frozen threshold of 0.17, it correctly identified 259 of 261 patients with Parkinson's Disease, producing only two false negatives. The RBF SVM performed similarly (F2 = 0.923), while the FIS achieved a lower F2-score (0.904).
+
+The model's intended users would be healthcare professionals, such as general practitioners, who could use its output to help decide whether a patient should be referred for further specialist assessment. The MLP would function as a decision-support tool, not as an autonomous diagnostic system. Patients with a model score of **at least 0.17** would be flagged for clinical review, while patients below this threshold would not be flagged by the model. Clinical judgement and other patient information would remain essential in either case.
+
+The main trade-off concerns false positives and false negatives. In the test set, the MLP produced 72 false positives and two false negatives. False negatives could delay further assessment for patients with Parkinson's Disease, making high recall particularly important in this screening-oriented workflow. However, false positives could lead to unnecessary referrals, additional examinations, patient anxiety and increased healthcare workload. In total, 331 of the 421 test patients would be flagged, meaning sufficient capacity for follow-up would be necessary.
+
+Finally, the potential value of this approach depends on several assumptions. Healthcare professionals must have the resources to review flagged patients, and the relationships learned from the synthetic dataset must also be relevant to real patients. Since the dataset is synthetic, these results do not establish clinical effectiveness. Validation on representative real-world data and appropriate human oversight would therefore be necessary before practical deployment.
 
 # Reflection
 
-```{=html}
-<!-- TODO: what worked best and why (bias-variance, linearity, model capacity, regularization,
-training data volume); challenges encountered and how they were addressed; main limitations
-and concrete future improvements. -->
-```
+The MLP achieved the strongest overall performance, with a test F2-score of 0.942, compared to 0.923 for the RBF SVM and 0.904 for the FIS. The RBF SVM slightly outperformed the linear SVM during cross-validation (AP 0.937 versus 0.932), suggesting that nonlinear relationships provided some additional predictive information, although the improvement was limited.
+
+The MLP experiments highlighted the importance of model capacity and regularization. Configurations with weaker regularization (lower alpha values) achieved almost perfect training AP but lower cross-validation performance, suggesting overfitting. The selected configuration (32 hidden neurons, alpha = 1) achieved a better balance between fitting the training data and generalising to unseen data. This illustrates the bias-variance trade-off: increasing model complexity can capture more patterns but may also increase overfitting. The FIS was more interpretable but achieved lower predictive performance, potentially because it used only four input features and seven rules instead of all 32 features.
+
+One challenge was designing and tuning the FIS, particularly selecting suitable input features, membership functions and rules. Its limited number of rules made it difficult to represent the relationships captured by the other models. Another challenge was selecting decision thresholds. This was addressed by maximising F2 on a separate validation set and keeping the selected thresholds fixed for the final test evaluation.
+
+The main limitation is the use of a synthetic dataset, meaning the results may not generalise to real patients. Additionally, the relatively low specificity of all models results in many false positives. Future work could evaluate the models on real clinical data, investigate additional FIS features and rules, and explore methods to improve specificity while maintaining high recall. More extensive data and external validation would also help assess whether the observed performance generalises beyond this dataset.
+
+Overall, the experiment demonstrated the importance of balancing predictive performance, model complexity and interpretability when selecting a model for decision support.
 
 # References
 
-```{=html}
-<!-- TODO: cite scikit-learn, your FIS library, and any literature referenced for the FIS
-input choices or metric/threshold discussion. references.bib already exists in this folder
-from Assignment 1, add your new entries there. -->
-```
+::: {#refs}
+:::

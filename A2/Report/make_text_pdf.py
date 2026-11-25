@@ -16,7 +16,7 @@ import re
 import subprocess
 from pathlib import Path
 
-SRC = Path("Team-20.qmd")
+SRC = Path("Team-20.qmd")  # deliverables: Team-20.pdf and Team-20-text.pdf
 OUT = Path("Team-20-text.qmd")
 
 text = SRC.read_text(encoding="utf-8")
